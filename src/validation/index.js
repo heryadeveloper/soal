@@ -1,0 +1,1 @@
+module.exports.mapelValidation = require('./mapel.validation');

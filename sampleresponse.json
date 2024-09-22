@@ -1,0 +1,17 @@
+{
+    "error": false,
+    "message":"found soal",
+    "data":{
+        "idmapel":1,
+        "nama_mapel":"agama",
+        "kelas":"X PPLG 1",
+        "soal":{
+            "kode_soal":1,
+            "nomor_soal":1,
+            "kode_mapel":1,
+            "jenis_soal":0,
+            "text_soal":"Amira diajak orangtuanya menghadiri undangan makan siang pamannya. Setelah berbincang-bincang mereka menuju ruang makan. Makanan dengan prasmanan telah disediakan bibinya. sikap yang baik amira pada saat akan memulai makan siang adalah .... ",
+            "jawaban":""
+        }
+    }
+}

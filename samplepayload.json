@@ -1,0 +1,48 @@
+{
+    "nama_mapel":"agama",
+    "id_mapel":1,
+    "kelas":"X PPLG 1",
+    "kode_soal": 1,
+    "nomor_soal": 1,
+    "jenis_soal": 0,
+    "text_soal":"sebutkan pengertian dari nabati ?",
+    "text_jawaban":
+        {
+            "pilihan_ganda":[
+                {
+                    "idx_pilihan":"a",
+                    "pilihan":"nabati",
+                    "pilihan_benar":1,
+                    "skor": 10
+                },
+                {
+                    "idx_pilihan":"b",
+                    "pilihan":"nabati",
+                    "pilihan_benar":0,
+                    "skor": 0
+                },
+                {
+                    "idx_pilihan":"c",
+                    "pilihan":"nabati",
+                    "pilihan_benar":0,
+                    "skor": 0
+                },
+                {
+                    "idx_pilihan":"d",
+                    "pilihan":"nabati",
+                    "pilihan_benar":0,
+                    "skor": 0
+                },
+                {
+                    "idx_pilihan":"e",
+                    "pilihan":"nabati",
+                    "pilihan_benar":0,
+                    "skor": 0
+                }
+            ],
+            "essay":{
+            }
+        }
+    
+
+}

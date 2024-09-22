@@ -1,0 +1,145 @@
+POST http://localhost:8084/v2/mapel/addMapelBaru
+Content-Type: application/json
+
+{
+    "idmapel": 2,
+    "nama_mapel":"Fisika",
+    "kelas":"X PPLG"
+}
+
+###
+GET http://localhost:8084/checkservice
+
+###
+GET http://localhost:8084/v2/mapel/getDataMapel
+
+### get soal
+GET http://localhost:8084/v2/mapel/getSoal?idmapel=1&kelas=X PPLG 1
+
+### get soal essay
+GET http://localhost:8084/v2/mapel/getSoalEssay?idmapel=1&nomor_soal=2&kelas=X PPLG 1&jenis_soal=0
+
+### get pilgan
+GET http://localhost:8084/v2/mapel/getPilgan?kode_mapel=1&kelas=X PPLG 1
+
+### get essay
+GET http://localhost:8084/v2/mapel/getEssay?kode_mapel=1&kelas=X PPLG 1
+
+### get essay
+GET http://localhost:8084/v2/mapel/getAvailableTest?kelas=X PPLG 1
+
+### insert soal
+POST http://localhost:8084/v2/mapel/insertSoal
+Content-Type: application/json
+
+{
+    "nama_mapel": "Agama",
+    "id_mapel": 1,
+    "kelas": "X PPLG 1",
+    "kode_soal": "1",
+    "nomor_soal": "2",
+    "jenis_soal": "0",
+    "text_soal": "Berikut yang termasuk isi kandungan Q.S Al- Maidah ayat 48 adalah …",
+    "available_on": "2024-09-22",
+    "text_jawaban": {
+        "pilihan_ganda": [
+            {
+                "idx_pilihan": "a",
+                "pilihan": "Kerja keras dan berusaha diperintahkan Allah Swt kepada seluruh umat tanpa terkecuali",
+                "pilihan_benar": 0,
+                "skor": 0
+            },
+            {
+                "idx_pilihan": "b",
+                "pilihan": "Al-Qur’an telah disempurnakan isinya semua dengan kitab-kitab yang lainnya",
+                "pilihan_benar": 0,
+                "skor": 0
+            },
+            {
+                "idx_pilihan": "c",
+                "pilihan": "Semua kitab Allah Swt yang telah diturunkan kepada para rasul sudah sangat sempurna",
+                "pilihan_benar": 0,
+                "skor": 0
+            },
+            {
+                "idx_pilihan": "d",
+                "pilihan": "Manusia hendaknya mengalah dalam melakukan kebaikan kepada orang lain",
+                "pilihan_benar": 0,
+                "skor": 0
+            },
+            {
+                "idx_pilihan": "e",
+                "pilihan": "Al-Qur’an adalah kitab suci yang isinya paling sempurna, berlaku sepanjang zaman, dan terjaga keasliannya",
+                "pilihan_benar": 1,
+                "skor": 0
+            }
+        ],
+        "essay": {}
+    }
+}
+
+
+###
+POST http://localhost:8084/v2/mapel/insertJawabanSiswa
+Content-Type: application/json
+
+{
+    "payload":[
+        {
+            "nama_siswa":"AHMAD MUKHOWAN",
+            "nisn":"81799894",
+            "kelas":"X PPLG 1",
+            "idmapel":1,
+            "kode_soal":1,
+            "nomor_soal":1,
+            "jenis_soal":0,
+            "text_soal":"Amira diajak orangtuanya menghadiri undangan makan siang pamannya. Setelah berbincang-bincang mereka menuju ruang makan. Makanan dengan prasmanan telah disediakan bibinya. sikap yang baik amira pada saat akan memulai makan siang adalah .... ",
+            "jawaban":{
+                "idx_pilihan":"a"
+            },
+            "skor":10
+        },
+        {
+            "nama_siswa":"AHMAD MUKHOWAN",
+            "nisn":"81799894",
+            "kelas":"X PPLG 1",
+            "idmapel":1,
+            "kode_soal":1,
+            "nomor_soal":2,
+            "jenis_soal":1,
+            "text_soal":" الَلّهُمَّ اجُرْنِيْ فِي مُصِيْبَتِي...... Terjemahan yang benar untuk potongan do’a di atas adalah…",
+            "jawaban":{
+                "text_jawaban":"jawab"
+            },
+            "skor":10
+        },
+        {
+            "nama_siswa":"AHMAD MUKHOWAN",
+            "nisn":"81799894",
+            "kelas":"X PPLG 1",
+            "idmapel":1,
+            "kode_soal":1,
+            "nomor_soal":3,
+            "jenis_soal":1,
+            "text_soal":"sebutkan pengertian dari nabati ?",
+            "jawaban":{
+                "text_jawaban":"b"
+            },
+            "skor":0
+        },
+        {
+            "nama_siswa":"AHMAD MUKHOWAN",
+            "nisn":"81799894",
+            "kelas":"X PPLG 1",
+            "idmapel":1,
+            "kode_soal":1,
+            "nomor_soal":5,
+            "jenis_soal":0,
+            "text_soal":"sebutkan",
+            "jawaban":{
+                "idx_pilihan":"c"
+            },
+            "skor":0
+        }
+    ]
+}

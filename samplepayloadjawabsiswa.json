@@ -1,0 +1,12 @@
+{
+    "nama_siswa":"test",
+    "nisn":"123456",
+    "kelas":"X PPLG 1",
+    "id_mapel":1,
+    "kode_soal":1,
+    "nomor_soal":1,
+    "jenis_soal":0,
+    "jawaban":{
+        "idx_pilihan":"a"
+    }
+}

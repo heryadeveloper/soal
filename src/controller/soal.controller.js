@@ -2,6 +2,7 @@ const { soalService } = require("../service");
 const catchAsync = require("../utils/catchAsync");
 const expectationFailed = require("../utils/errorExpectationFailed");
 const responseInfo = require("../utils/responseInfo");
+const createError = require('http-errors');
 
 const getSoal = catchAsync(async(req, res) => {
     const getSoals = await soalService.getSoal(req);
@@ -39,13 +40,19 @@ const getEssay = catchAsync(async( req, res) => {
     }
 })
 
-const inputSoal = catchAsync(async(req, res) => {
-    const inputSoals = await soalService.inputSoalHandler(req);
-    if (inputSoals) {
-        res.send(responseInfo('Success Insert Soal', inputSoals));
-    } else {
-        res.send(expectationFailed('Something issue when inserting soal', null));
+const inputSoal = catchAsync(async(req, res, next) => {
+    try {
+        const inputSoals = await soalService.inputSoalHandler(req);
+        console.log('input soal log: ', inputSoals);
+        if (inputSoals) {
+            res.send(responseInfo('Success Insert Soal', inputSoals));
+        } else {
+            res.send(expectationFailed('Something issue when inserting soal', null));
+        }
+    } catch (error) {
+        res.send(expectationFailed(error.message, null));
     }
+   
 })
 
 const inputJawabanSiswa = catchAsync(async(req, res) => {

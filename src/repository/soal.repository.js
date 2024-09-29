@@ -1,22 +1,36 @@
 const db = require('../db/models');
-const {Op} = require('sequelize');
+const {Op, where} = require('sequelize');
 
-async function insertIntoSoal(kdSoal, nomorSoal, kdMapel, kelas, txSoal, jenis_soal, available_on){
+async function insertIntoSoal(kdSoal, nomorSoal, kdMapel, kelas, txSoal, jenis_soal, available_on, skor){
     try {
-        const soalinput = await db.soal.create({
-            kode_soal: kdSoal,
-            nomor_soal: nomorSoal,
-            kode_mapel: kdMapel,
-            kelas,
-            text_soal: txSoal,
-            jenis_soal,
-            created_date: new Date,
-            available_on: available_on
+        const existingSoal = await db.soal.findOne({
+            where: {nomor_soal: nomorSoal, kode_mapel: kdMapel, kelas: kelas}
         });
-        return soalinput.get({ plain: true });
+
+        if (existingSoal) {
+            throw new Error(`soal dengan nomor ${nomorSoal} sudah ada di kelas ${kelas} untuk mapel ${kdMapel}`);
+        } else {
+            console.log('skor: ', skor);
+                await db.soal.create({
+                kode_soal: kdSoal,
+                nomor_soal: nomorSoal,
+                kode_mapel: kdMapel,
+                kelas,
+                text_soal: txSoal,
+                jenis_soal,
+                created_date: new Date,
+                available_on: available_on,
+                skor
+            });
+            // return soalinput.get({ plain: true });
+            return {
+                responses: 'Success add soal'
+            }
+        }
+        
     } catch (error) {
         console.error('Error when inserting data soal');
-        throw error;
+        throw new Error(error.message);
     }
 }
 
@@ -40,8 +54,8 @@ async function insertIntoPilihan(kdSoal, nomorSoal, pilihan, idx_pilihan, kelas,
 
 async function insertIntoJawaban(kdSoal, nomorSoal, jawaban, jenis_soal, kelas, skor) {
     try {
-        await db.pilihan.create({
-            kd_soal: kdSoal,
+        await db.essay.create({
+            kode_soal: kdSoal,
             nomor_soal: nomorSoal,
             jenis_soal,
             jawaban,
@@ -186,6 +200,117 @@ async function updateStatusSoal(kode_mapel, kode_soal, kelas){
     }
 }
 
+async function getSoalByKodeAndNomor(kode_soal, nomor_soal, kelas){
+    try {
+        const existingSoal = await db.soal.findOne({
+            where: {nomor_soal, kode_mapel: kode_soal, kelas
+            },
+            raw: true,
+        });
+        return existingSoal;
+    } catch (error) {
+        console.error('Error when get data');
+        throw new error.message;
+    }
+}
+
+async function updateTextSoal(text_soal, kode_soal, nomor_soal, kelas, skor){
+    try {
+        console.log('nilai skor payload: ', skor);
+        let skors = skor != null ? skor : 0;
+        console.log('nilai skor: ', skors);
+        await db.soal.update(
+            {
+                text_soal,
+                skor: skors
+            },
+        {
+            where: {
+                kode_soal,
+                nomor_soal,
+                kelas
+            }
+        })
+        return {
+            responses: 'Success Update soal'
+        }
+    } catch (error) {
+        console.error('Error when update soal');
+        throw new error.message;
+    }
+}
+
+async function deletePilihanGanda(kode_soal, nomor_soal, kelas){
+    try {
+        await db.pilihan_ganda.destroy({
+            where: {
+                kode_soal,
+                nomor_soal,
+                kelas
+            }
+        })
+    } catch (error) {
+        console.error('Error when delete soal');
+        throw new error.message;
+    }
+}
+
+async function getJawabanEssay(kode_soal, jenis_soal, nomor_soal, kelas){
+    try {
+        console.log('findOneJawabanEssay');
+        const jawabanessay = await db.essay.findOne({
+            where:{
+                kode_soal,
+                jenis_soal,
+                nomor_soal,
+                kelas
+            },
+            raw: true,
+        });
+        console.log('jawaban essay repo : ', jawabanessay);
+        return jawabanessay;
+    } catch (error) {
+        console.error('Error when get jawaban essay');
+        throw new error.message;
+    }
+}
+
+async function updateJawabanEssay(jawaban, kode_soal, jenis_soal, nomor_soal, kelas){
+    try {
+        await db.essay.update(
+            {jawaban},
+            {
+                where:{
+                    kode_soal,
+                    jenis_soal,
+                    nomor_soal,
+                    kelas
+                }
+            }
+        )
+    } catch (error) {
+        console.error('Error update jawaban');
+        throw new error.message;
+    }
+}
+
+async function getJawabanEssayB(kode_soal, nomor_soal, kelas){
+    try {
+        const jawabanEssay = await db.essay.findOne({
+            where: {
+                kode_soal,
+                nomor_soal,
+                kelas
+            }, 
+            raw: true,
+        });
+        return jawabanEssay;
+    } catch (error) {
+        console.error('Error get jawaban essay');
+        throw new error.message;
+    }
+}
+
 module.exports = {
     insertIntoSoal,
     insertIntoPilihan,
@@ -197,5 +322,11 @@ module.exports = {
     insertIntoPilihanBulk,
     insertJawabanSiswaBulk,
     getAvailableTest,
-    updateStatusSoal
+    updateStatusSoal,
+    getSoalByKodeAndNomor,
+    updateTextSoal,
+    deletePilihanGanda,
+    getJawabanEssayB,
+    updateJawabanEssay,
+    getJawabanEssay
 }

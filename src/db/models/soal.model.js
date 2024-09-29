@@ -43,6 +43,10 @@ module.exports = (sequelize, DataType) => {
             status:{
                 type:DataType.INTEGER,
                 allowNull: true
+            },
+            skor:{
+                type:DataType.INTEGER,
+                allowNull: true,
             }
         },{
             tableName:'soal'

@@ -18,6 +18,7 @@ const inputSoal = {
         jenis_soal: Joi.number().valid(0, 1).required(), // 0 untuk pilihan ganda, 1 untuk essay
         text_soal: Joi.string().required(),
         available_on: Joi.date(),
+        skor: Joi.number(),
         text_jawaban: Joi.object().keys({
             pilihan_ganda: Joi.array().items(
                 Joi.object().keys({

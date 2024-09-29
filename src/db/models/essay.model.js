@@ -15,6 +15,10 @@ module.exports = (sequelize, DataType)=> {
                 type:DataType.INTEGER,
                 allowNull: false,
             },
+            jenis_soal:{
+                type: DataType.INTEGER,
+                allowNull: false
+            },
             jawaban:{
                 type:DataType.STRING,
                 allowNull:false,
@@ -30,7 +34,7 @@ module.exports = (sequelize, DataType)=> {
             },
             skor:{
                 type:DataType.INTEGER,
-                allowNull: false,
+                allowNull: true,
             }
         },{
             tableName:'essay'

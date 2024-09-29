@@ -3,12 +3,16 @@ const { soalRepository, mapelRepository } = require("../repository");
 async function getSoal(req){
     const {idmapel, kelas} = req.query;
     try {
+
+        const mapelInTable = await mapelRepository.getDataMapelForOne(idmapel);
+
         const getSoals = await soalRepository.getSoal(idmapel, kelas);
 
 
         const data = await Promise.all(
             getSoals.map(async (soal) => {
                 let pilihan = null;
+                let jawabanEssay = null
                 
                 // Hanya ambil pilihan jika soal jenisnya pilihan ganda (jenis_soal === 0)
                 if (soal.jenis_soal === 0) {
@@ -17,21 +21,30 @@ async function getSoal(req){
                     // Ubah data pilihan menjadi bentuk yang diinginkan
                     pilihan = pilihan.map((jawaban) => ({
                         idx_pilihan: jawaban.idx_pilihan,
-                        soal_pilihan: jawaban.pilihan,
+                        pilihan: jawaban.pilihan,
+                        pilihan_benar: jawaban.pilihan_benar,
+                        skor: jawaban.skor
                     }));
+                } else {
+                    jawabanEssay = await soalRepository.getJawabanEssayB(soal.kode_soal,soal.nomor_soal, soal.kelas);
                 }
 
                 const pilihan_ganda = soal.jenis_soal === 0 && pilihan != null ? pilihan : null;
+                const jawaban_essay = soal.jenis_soal === 1 && jawabanEssay != null ? jawabanEssay : null;
 
                 
                 return {
+                    nama_mapel: mapelInTable.nama_mapel,
+                    id_mapel: mapelInTable.idmapel,
                     kode_soal: soal.kode_soal,
                     nomor_soal: soal.nomor_soal,
                     kode_mapel: soal.kode_mapel,
                     jenis_soal: soal.jenis_soal,
                     kelas: soal.kelas,
                     text_soal: soal.text_soal,
-                    pilihan_ganda
+                    skor: soal.skor,
+                    pilihan_ganda,
+                    jawaban_essay
                 };
             })
         );
@@ -78,19 +91,25 @@ async function getEssay(req){
 
 async function inputSoalHandler(req){
     try {
-        const {nama_mapel, id_mapel, kelas, kode_soal, nomor_soal, jenis_soal, available_on, text_soal, text_jawaban} = req.body;
+        const {nama_mapel, id_mapel, kelas, kode_soal, nomor_soal, jenis_soal, available_on, skor, text_soal, text_jawaban} = req.body;
         // get mapel, if not in table, insert first
         const mapelInTable = await mapelRepository.getDataMapelForOne(id_mapel);
-        console.log('mapel in table : ', mapelInTable.nama_mapel);
 
         if (!mapelInTable) {
             // insert parent table (mapel)
             await mapelRepository.insertDataMapel(id_mapel, nama_mapel, kelas);
 
         } else {
-            // insert into child 1 (soal)
-        const soalinput = await soalRepository.insertIntoSoal(kode_soal, nomor_soal, id_mapel, kelas, text_soal, jenis_soal, available_on);
 
+            const existingSoal = await soalRepository.getSoalByKodeAndNomor(kode_soal, nomor_soal, kelas);
+            let soalInput;
+            if (existingSoal) {
+                // if soal exist update the soal
+                soalInput = await soalRepository.updateTextSoal(text_soal, kode_soal, nomor_soal, kelas, skor);
+            } else {
+                 // insert into child 1 (soal)
+                soalInput = await soalRepository.insertIntoSoal(kode_soal, nomor_soal, id_mapel, kelas, text_soal, jenis_soal, available_on, skor);
+            }
         //logic save jawaban using pilgan or essay
         if (jenis_soal === 0) {
             // save jawaban ke table pilihan
@@ -103,18 +122,34 @@ async function inputSoalHandler(req){
                 pilihan_benar: jawaban.pilihan_benar,
                 skor: jawaban.skor
             }))
+
+            console.log('delete pilihan');
+            // first, delete existing pilihan for the soal if it exist
+            await soalRepository.deletePilihanGanda(kode_soal, nomor_soal, kelas);
+
             await soalRepository.insertIntoPilihanBulk(jawabanPilihanGanda);
         } else {
-            await soalRepository.insertIntoJawaban(kode_soal, nomor_soal, text_jawaban.essay.jawaban, jenis_soal, kelas, text_jawaban.essay.skor);
+            const existingEssayJawaban = await soalRepository.getJawabanEssay(kode_soal, jenis_soal, nomor_soal, kelas);
+            
+            console.log('data essay jawaban: ', existingEssayJawaban);
+
+            if (existingEssayJawaban) {
+                await soalRepository.updateJawabanEssay(text_jawaban.essay.jawaban, kode_soal, jenis_soal, nomor_soal, kelas);
+            } else {
+                console.log('insert jawaban essay: kode soal: ', kode_soal);
+                await soalRepository.insertIntoJawaban(kode_soal, nomor_soal, text_jawaban.essay.jawaban, jenis_soal, kelas, text_jawaban.essay.skor);
+            }
         }
 
-        return soalinput;
+    
+        console.log('finish');
+        return soalInput;
         }
-        
+       
         
     } catch (error) {
         console.error('Error in service input soal handler', error);
-        throw error;
+        throw new Error(error.message);
     }
 }
 

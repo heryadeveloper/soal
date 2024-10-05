@@ -228,6 +228,26 @@ async function getAvailableTest(req) {
     }
 }
 
+async function deleteSoal(req){
+    const {nomor_soal, kode_mapel, jenis_soal, kelas} = req.body;
+    try{
+        if (jenis_soal === 0) {
+            await soalRepository.deletePilihanGanda(kode_mapel, nomor_soal, kelas);
+        } else {
+            await soalRepository.deleteEssay(kode_mapel, nomor_soal, kelas);
+        }
+            await soalRepository.deleteSoal(nomor_soal, kode_mapel, jenis_soal, kelas);
+        return {
+            nomor_soal,
+            jenis_soal,
+            kelas
+        }
+    }catch(error){
+        console.error('Error Service Delete Soal', error);
+        throw error;
+    }
+}
+
 
 module.exports = {
     getSoal,
@@ -236,6 +256,7 @@ module.exports = {
     getEssay,
     inputSoalHandler,
     inputJawabanSiswa,
-    getAvailableTest
+    getAvailableTest,
+    deleteSoal
 }
 

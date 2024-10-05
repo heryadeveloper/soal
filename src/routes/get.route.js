@@ -14,7 +14,8 @@ const routes = [
     { path: '/getEssay', method: 'get', handler: soalController.getEssay},
     { path: '/insertSoal', method: 'post', validation: mapelValidation.inputSoal, handler: soalController.inputSoal},
     { path: '/insertJawabanSiswa', method: 'post', validation: mapelValidation.inputJawabanSiswa, handler: soalController.inputJawabanSiswa},
-    { path: '/getAvailableTest', method: 'get', handler: soalController.getAvailableTest}
+    { path: '/getAvailableTest', method: 'get', handler: soalController.getAvailableTest},
+    { path: '/deleteSoal', method : 'post', validation: mapelValidation.deleteSoal, handler: soalController.deleteSoal},
 ];
 
 routes.forEach(route => {

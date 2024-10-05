@@ -57,8 +57,18 @@ const inputJawabanSiswa = {
     }).required()
 }
 
+const deleteSoal = {
+    body: Joi.object().keys({
+        nomor_soal: Joi.number().required(),
+        kode_mapel: Joi.number().required(), 
+        jenis_soal: Joi.number().required(), 
+        kelas: Joi.string().required(),
+    })
+}
+
 module.exports = {
     inputMapel,
     inputSoal,
-    inputJawabanSiswa
+    inputJawabanSiswa,
+    deleteSoal
 }

@@ -76,6 +76,16 @@ const getAvailableTest = catchAsync(async( req, res) => {
     }
 })
 
+const deleteSoal = catchAsync(async(req, res) => {
+    const resDeleteSoal = await soalService.deleteSoal(req);
+    console.log('delete log: ', resDeleteSoal);
+    if (resDeleteSoal.nomor_soal != null) {
+        res.send(responseInfo('Success Delete Soal', resDeleteSoal));
+    } else {
+        res.send(expectationFailed('Something when wrong', null));
+    }
+})
+
 module.exports = {
     getSoal,
     getSoalEssay,
@@ -83,5 +93,6 @@ module.exports = {
     getEssay,
     inputSoal,
     inputJawabanSiswa,
-    getAvailableTest
+    getAvailableTest,
+    deleteSoal
 }

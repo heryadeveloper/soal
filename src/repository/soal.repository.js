@@ -257,7 +257,6 @@ async function deletePilihanGanda(kode_soal, nomor_soal, kelas){
 
 async function getJawabanEssay(kode_soal, jenis_soal, nomor_soal, kelas){
     try {
-        console.log('findOneJawabanEssay');
         const jawabanessay = await db.essay.findOne({
             where:{
                 kode_soal,
@@ -311,6 +310,37 @@ async function getJawabanEssayB(kode_soal, nomor_soal, kelas){
     }
 }
 
+async function deleteEssay(kode_soal, nomor_soal, kelas){
+    try {
+        await db.essay.destroy({
+            where : {
+                kode_soal,
+                nomor_soal,
+                kelas
+            }
+        })
+    } catch (error) {
+        console.error('Error delete essay');
+        throw new error.message;
+    }
+}
+
+async function deleteSoal(nomor_soal, kode_mapel, jenis_soal, kelas){
+    try {
+        await db.soal.destroy({
+            where: {
+                nomor_soal,
+                kode_mapel,
+                jenis_soal,
+                kelas
+            }
+        })
+    } catch (error) {
+        console.error('Error  delete  soal');
+        throw new error.message;
+    }
+}
+
 module.exports = {
     insertIntoSoal,
     insertIntoPilihan,
@@ -328,5 +358,7 @@ module.exports = {
     deletePilihanGanda,
     getJawabanEssayB,
     updateJawabanEssay,
-    getJawabanEssay
+    getJawabanEssay,
+    deleteEssay,
+    deleteSoal
 }

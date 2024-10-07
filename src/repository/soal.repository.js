@@ -76,6 +76,7 @@ async function getSoal(kode_soal, kelas){
                 kode_soal,
                 kelas,
             },
+            order:[['nomor_soal','ASC']],
             raw: true,
         });
         return soal;

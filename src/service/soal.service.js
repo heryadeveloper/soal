@@ -197,7 +197,7 @@ async function inputJawabanSiswa(req){
              // Handle multiple-choice or essay based on jenis_soal
             if (jenis_soal === 0) {
                 //jika jawaban pilihan ganda mesti cek terlebihh dahulu untuk point yang di dapatkan jika berhasil menjawab dengn benar
-                const getSkor = await soalRepository.getSkor(nomor_soal, idmapel, kelas, 1);
+                const getSkor = await soalRepository.getSkor(idmapel, nomor_soal, kelas, 1);
                 console.log('idx pilihan: ', idx_pilihan);
                 if (getSkor.idx_pilihan === idx_pilihan) {
                     jawabanObj.skor = getSkor.skor;
@@ -233,7 +233,7 @@ async function inputJawabanSiswa(req){
         }
     
         // If needed, you can throw the error again or handle it in some way
-        throw new Error('Database operation failed: ' + error.message);
+        throw new Error('Database operation failed: ' + error);
     }
 }
 

@@ -347,11 +347,11 @@ async function deleteSoal(nomor_soal, kode_mapel, jenis_soal, kelas){
     }
 }
 
-async function getSkor(nomor_soal, kode_mapel, kelas, pilihan_benar){
+async function getSkor( kode_mapel, nomor_soal, kelas, pilihan_benar){
     try {
         const getSkor = await db.pilihan_ganda.findOne({
             where: {
-                nomor_soal, kode_mapel, kelas, pilihan_benar
+                kode_mapel, nomor_soal, kelas, pilihan_benar
             },
             raw: true,
         });

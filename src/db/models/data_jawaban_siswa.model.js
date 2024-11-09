@@ -23,10 +23,6 @@ module.exports = (sequelize, DataType) => {
                 type:DataType.INTEGER,
                 allowNull: false
             },
-            kode_soal: {
-                type:DataType.INTEGER,
-                allowNull: false,
-            },
             nomor_soal:{
                 type:DataType.INTEGER,
                 allowNull: false,

@@ -54,10 +54,10 @@ async function insertIntoPilihan(kdSoal, nomorSoal, pilihan, idx_pilihan, kelas,
     }
 }
 
-async function insertIntoJawaban(kdSoal, nomorSoal, jawaban, jenis_soal, kelas, skor) {
+async function insertIntoJawaban(kdMapel, nomorSoal, jawaban, jenis_soal, kelas, skor) {
     try {
         await db.essay.create({
-            kode_soal: kdSoal,
+            kode_mapel: kdMapel,
             nomor_soal: nomorSoal,
             jenis_soal,
             jawaban,

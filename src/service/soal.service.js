@@ -139,7 +139,7 @@ async function inputSoalHandler(req){
                 await soalRepository.updateJawabanEssay(text_jawaban.essay.jawaban, id_mapel, jenis_soal, nomor_soal, kelas);
             } else {
                 console.log('insert jawaban essay: kode soal: ', id_mapel);
-                await soalRepository.insertIntoJawaban(kode_soal, nomor_soal, text_jawaban.essay.jawaban, jenis_soal, kelas, text_jawaban.essay.skor);
+                await soalRepository.insertIntoJawaban(id_mapel, nomor_soal, text_jawaban.essay.jawaban, jenis_soal, kelas, text_jawaban.essay.skor);
             }
         }
         //asiggn soal into kelas

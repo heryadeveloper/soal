@@ -16,7 +16,7 @@ async function getSoal(req){
                 
                 // Hanya ambil pilihan jika soal jenisnya pilihan ganda (jenis_soal === 0)
                 if (soal.jenis_soal === 0) {
-                    pilihan = await soalRepository.getPilgan(soal.kode_soal,soal.nomor_soal, soal.kelas);
+                    pilihan = await soalRepository.getPilgan(soal.kode_mapel,soal.nomor_soal, soal.kelas);
 
                     // Ubah data pilihan menjadi bentuk yang diinginkan
                     pilihan = pilihan.map((jawaban) => ({
@@ -26,7 +26,7 @@ async function getSoal(req){
                         skor: jawaban.skor
                     }));
                 } else {
-                    jawabanEssay = await soalRepository.getJawabanEssayB(soal.kode_soal,soal.nomor_soal, soal.kelas);
+                    jawabanEssay = await soalRepository.getJawabanEssayB(soal.kode_mapel,soal.nomor_soal, soal.kelas);
                 }
 
                 const pilihan_ganda = soal.jenis_soal === 0 && pilihan != null ? pilihan : null;
@@ -36,7 +36,6 @@ async function getSoal(req){
                 return {
                     nama_mapel: mapelInTable.nama_mapel,
                     id_mapel: mapelInTable.idmapel,
-                    kode_soal: soal.kode_soal,
                     nomor_soal: soal.nomor_soal,
                     kode_mapel: soal.kode_mapel,
                     jenis_soal: soal.jenis_soal,
@@ -91,9 +90,10 @@ async function getEssay(req){
 
 async function inputSoalHandler(req){
     try {
-        const {nama_mapel, id_mapel, kelas, kode_soal, nomor_soal, jenis_soal, available_on, skor, text_soal, text_jawaban} = req.body;
+        const {nama_mapel, id_mapel, kelas, nomor_soal, jenis_soal, available_on, skor, text_soal, text_jawaban} = req.body;
         // get mapel, if not in table, insert first
         const mapelInTable = await mapelRepository.getDataMapelForOne(id_mapel);
+        const assignStatus = await mapelRepository.getMapelAssignForClass(id_mapel, kelas);
 
         if (!mapelInTable) {
             // insert parent table (mapel)
@@ -101,20 +101,22 @@ async function inputSoalHandler(req){
 
         } else {
 
-            const existingSoal = await soalRepository.getSoalByKodeAndNomor(kode_soal, nomor_soal, kelas);
+            const existingSoal = await soalRepository.getSoalByKodeAndNomor(id_mapel, nomor_soal, kelas);
             let soalInput;
             if (existingSoal) {
+                console.log('existing')
                 // if soal exist update the soal
-                soalInput = await soalRepository.updateTextSoal(text_soal, kode_soal, nomor_soal, kelas, skor);
+                soalInput = await soalRepository.updateTextSoal(text_soal, id_mapel, nomor_soal, kelas, skor);
             } else {
                  // insert into child 1 (soal)
-                soalInput = await soalRepository.insertIntoSoal(kode_soal, nomor_soal, id_mapel, kelas, text_soal, jenis_soal, available_on, skor);
+                console.log('baru')
+                soalInput = await soalRepository.insertIntoSoal(nomor_soal, id_mapel, kelas, text_soal, jenis_soal, available_on, skor);
             }
         //logic save jawaban using pilgan or essay
         if (jenis_soal === 0) {
             // save jawaban ke table pilihan
             const jawabanPilihanGanda = text_jawaban.pilihan_ganda.map(jawaban =>({
-                kode_soal: kode_soal,
+                kode_mapel: id_mapel,
                 nomor_soal: nomor_soal,
                 pilihan: jawaban.pilihan,
                 idx_pilihan: jawaban.idx_pilihan,
@@ -125,27 +127,38 @@ async function inputSoalHandler(req){
 
             console.log('delete pilihan');
             // first, delete existing pilihan for the soal if it exist
-            await soalRepository.deletePilihanGanda(kode_soal, nomor_soal, kelas);
+            await soalRepository.deletePilihanGanda(id_mapel, nomor_soal, kelas);
 
             await soalRepository.insertIntoPilihanBulk(jawabanPilihanGanda);
         } else {
-            const existingEssayJawaban = await soalRepository.getJawabanEssay(kode_soal, jenis_soal, nomor_soal, kelas);
+            const existingEssayJawaban = await soalRepository.getJawabanEssay(id_mapel, jenis_soal, nomor_soal, kelas);
             
             console.log('data essay jawaban: ', existingEssayJawaban);
 
             if (existingEssayJawaban) {
-                await soalRepository.updateJawabanEssay(text_jawaban.essay.jawaban, kode_soal, jenis_soal, nomor_soal, kelas);
+                await soalRepository.updateJawabanEssay(text_jawaban.essay.jawaban, id_mapel, jenis_soal, nomor_soal, kelas);
             } else {
-                console.log('insert jawaban essay: kode soal: ', kode_soal);
+                console.log('insert jawaban essay: kode soal: ', id_mapel);
                 await soalRepository.insertIntoJawaban(kode_soal, nomor_soal, text_jawaban.essay.jawaban, jenis_soal, kelas, text_jawaban.essay.skor);
             }
         }
+        //asiggn soal into kelas
+        if (!assignStatus) {
+            //initiate data from data_induk first
+            const nisnSiswa = await mapelRepository.getDataInduk(kelas, '2024');
+            const nisnBulk = nisnSiswa.map(nisns => ({
+                kd_mapel: id_mapel,
+                kelas: kelas,
+                status_available: 1,
+                nisn: nisns.nisn
+            }))
+            console.log('nisn bulk : ', nisnBulk);
+            await mapelRepository.insertAssignSoalBulk(nisnBulk);
+            // await mapelRepository.insertAssignSoal(kode_soal, id_mapel, kelas, 1);
+        }
 
-    
-        console.log('finish');
         return soalInput;
         }
-       
         
     } catch (error) {
         console.error('Error in service input soal handler', error);
@@ -163,7 +176,6 @@ async function inputJawabanSiswa(req){
                 nisn,
                 kelas,
                 idmapel,
-                kode_soal,
                 nomor_soal,
                 jenis_soal,
                 text_soal,
@@ -176,7 +188,6 @@ async function inputJawabanSiswa(req){
                 nisn,
                 kelas,
                 idmapel,
-                kode_soal,
                 nomor_soal,
                 jenis_soal,
                 text_soal,
@@ -185,6 +196,15 @@ async function inputJawabanSiswa(req){
 
              // Handle multiple-choice or essay based on jenis_soal
             if (jenis_soal === 0) {
+                //jika jawaban pilihan ganda mesti cek terlebihh dahulu untuk point yang di dapatkan jika berhasil menjawab dengn benar
+                const getSkor = await soalRepository.getSkor(nomor_soal, idmapel, kelas, 1);
+                console.log('idx pilihan: ', idx_pilihan);
+                if (getSkor.idx_pilihan === idx_pilihan) {
+                    jawabanObj.skor = getSkor.skor;
+                }else{
+                    jawabanObj.skor = 0;
+                }
+
                 // Multiple-choice: Use idx_pilihan
                 jawabanObj.jawaban = idx_pilihan;
             } else if (jenis_soal === 1) {
@@ -196,7 +216,7 @@ async function inputJawabanSiswa(req){
             jawabanDataSiswaList.push(jawabanObj);
 
             // update status soal into 1 after success insert jawab
-            await soalRepository.updateStatusSoal(kode_soal, kode_soal, kelas);
+            await soalRepository.updateStatusSoal(kelas, nisn);
         }
         await soalRepository.insertJawabanSiswaBulk(jawabanDataSiswaList);
 
@@ -218,9 +238,9 @@ async function inputJawabanSiswa(req){
 }
 
 async function getAvailableTest(req) {
-    const {kelas} = req.query;
+    const {kelas, nisn} = req.query;
     try {
-        const availableTest = await soalRepository.getAvailableTest(kelas);
+        const availableTest = await soalRepository.getAvailableTest(kelas, nisn);
         return availableTest;
     } catch (error) {
         console.error('Error Service Get Available test', error);
@@ -247,6 +267,84 @@ async function deleteSoal(req){
         throw error;
     }
 }
+async function getDataJawabanSiswa(req){
+    const {kelas, idmapel, nisn, kode_guru} = req.query;
+    try {
+        const data = await soalRepository.getDataJawabanSiswa(kelas, idmapel, nisn, kode_guru);
+        return data;
+    } catch (error) {
+        console.error('Error Service get data jawaban siswa', error);
+        throw error;
+    }
+}
+
+async function updateSkorJawabanSiswa(req) {
+    try {
+        const { payload } = req.body;
+        // Gunakan Promise.all untuk menunggu semua update selesai
+        await Promise.all(payload.map(async (payloads) => {
+            const { skor, kelas, nisn, kode_soal, nomor_soal } = payloads;
+            // Lakukan update untuk setiap jawaban siswa
+            await soalRepository.updateSkorJawabanSiswa(kelas, nisn, kode_soal, nomor_soal, skor);
+        }));
+        return {
+            responseData: 'Success Update Skor Siswa'
+        }
+    } catch (error) {
+        console.error('Error in service upadte jawaban siswa', error);
+        throw error;
+    }
+}
+
+async function sumSkorJawabanSiswa(req){
+    try {
+        const { nisn, idmapel, kode_soal} = req.query;
+        const data = await soalRepository.sumSkorJawabanSiswa(nisn, idmapel, kode_soal);
+        //insert ke dalam penilaian siswa
+        await soalRepository.insertPenilaianSiswa(data[0].nama, data[0].rombel_saat_ini, nisn, data[0].nama_mapel, data[0].skor);
+        return data;
+    } catch (error) {
+        console.error('Error Sum Skor Nilai Siswa', error);
+        throw error;
+    }
+}
+
+async function analisisJawabanSiswa(req){
+    try {
+        const {kelas, idmapel} = req.query;
+        const data = await soalRepository.getAnalisisJawabanSiswa(kelas, idmapel);
+        const kategori = await soalRepository.getKategoriJawaban(kelas, idmapel);
+        return {
+            data_jawaban: data,
+            kategori
+        };
+    } catch (error) {
+        console.error('Error Analisis Jawaban Siswa', error);
+        throw error;
+    }
+}
+
+async function insertAnalisisJawabanSiswa(req) {
+    try {
+        const {kelas, idmapel} = req.body;
+        // query ke data-jawban-siswa
+        // looping disctinct no
+        // query untuk menentukan kategori
+        const data = await soalRepository.kategoriSoal(kelas, idmapel);
+        console.log('data analisis kategori: ', data.nomor_soal);
+        for (let analis of data) {
+            console.log('oleh data : ', analis.nomor_soal);
+            await soalRepository.insertAnalisisJawabanSiswa(kelas,idmapel, analis.nomor_soal, 'pilihan_ganda', analis.kategori_soal);
+        }
+       
+
+        return data;
+    
+    } catch (error) {
+        console.error('Error Insert Analisis Jawaban Siswa: ', error);
+        throw error;
+    }
+}
 
 
 module.exports = {
@@ -257,6 +355,11 @@ module.exports = {
     inputSoalHandler,
     inputJawabanSiswa,
     getAvailableTest,
-    deleteSoal
+    deleteSoal,
+    getDataJawabanSiswa,
+    updateSkorJawabanSiswa,
+    sumSkorJawabanSiswa,
+    analisisJawabanSiswa,
+    insertAnalisisJawabanSiswa
 }
 

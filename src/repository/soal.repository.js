@@ -1,7 +1,8 @@
 const db = require('../db/models');
 const {Op, where} = require('sequelize');
+const { QueryTypes } = require('sequelize');
 
-async function insertIntoSoal(kdSoal, nomorSoal, kdMapel, kelas, txSoal, jenis_soal, available_on, skor){
+async function insertIntoSoal(nomorSoal, kdMapel, kelas, txSoal, jenis_soal, available_on, skor){
     try {
         const existingSoal = await db.soal.findOne({
             where: {nomor_soal: nomorSoal, kode_mapel: kdMapel, kelas: kelas}
@@ -12,7 +13,6 @@ async function insertIntoSoal(kdSoal, nomorSoal, kdMapel, kelas, txSoal, jenis_s
         } else {
             console.log('skor: ', skor);
                 await db.soal.create({
-                kode_soal: kdSoal,
                 nomor_soal: nomorSoal,
                 kode_mapel: kdMapel,
                 kelas,
@@ -24,7 +24,9 @@ async function insertIntoSoal(kdSoal, nomorSoal, kdMapel, kelas, txSoal, jenis_s
             });
             // return soalinput.get({ plain: true });
             return {
-                responses: 'Success add soal'
+                responses: 'Success add soal',
+                idmapel: kdMapel,
+                kelas: kelas
             }
         }
         
@@ -69,11 +71,11 @@ async function insertIntoJawaban(kdSoal, nomorSoal, jawaban, jenis_soal, kelas, 
     }
 }
 
-async function getSoal(kode_soal, kelas){
+async function getSoal(kode_mapel, kelas){
     try {
         const soal = await db.soal.findAll({
             where:{
-                kode_soal,
+                kode_mapel,
                 kelas,
             },
             order:[['nomor_soal','ASC']],
@@ -104,11 +106,11 @@ async function getSoalEssay(kode_soal,nomor_soal, kelas, jenis_soal){
     }
 }
 
-async function getPilgan(kode_soal,nomor_soal, kelas){
+async function getPilgan(kode_mapel,nomor_soal, kelas){
     try {
         const pilgan = await db.pilihan_ganda.findAll({
             where:{
-                kode_soal,
+                kode_mapel,
                 nomor_soal,
                 kelas,
             },
@@ -157,41 +159,44 @@ async function insertJawabanSiswaBulk(jawabanSiswa){
     }
 }
 
-async function getAvailableTest(kelas) {
+async function getAvailableTest(kelas, nisn) {
     try{
-        const status = 0;
-        const availableSoal = await db.soal.findAll({
-            where: {
-                [Op.and]: [
-                    { kelas },
-                    { available_on: { [Op.lte]: new Date() } },
-                    { status }
-                ]
+        const result = await db.sequelize.query(`
+            select as2.status_available, m.idmapel, m.nama_mapel, m.guru_pengampu from assign_soal as2 
+            join mapel m on
+            m.idmapel = as2.kd_mapel 
+            where as2.kelas = :kelas
+            and as2.nisn = :nisn`,
+            {
+                replacements: {
+                kelas: kelas,
+                nisn: nisn
             },
-            raw: true,
-        })
-        if (availableSoal.length > 0) {
-            // Return availableSoal if data exists
-            return availableSoal;
-        } else {
-            // Return a specific message if no data is found
-            return [];
-        }
+            type: QueryTypes.SELECT
+        });
+        return result;
+        // const dataAvail = await db.assign_soal.findOne({
+        //     where : {
+        //         kelas,
+        //         nisn
+        //     },
+        //     raw: true,
+        // })
+        // return dataAvail;
     }catch(error){
         console.error('Error when get available test');
         throw error;
     }
 }
 
-async function updateStatusSoal(kode_mapel, kode_soal, kelas){
+async function updateStatusSoal(kelas , nisn){
     try {
-        await db.soal.update(
-            { status: 1 }, // Set status to 1
+        await db.assign_soal.update(
+            { status_available: 0 }, // Set status to 1
             {
                 where: {
-                    kode_soal: kode_soal,
-                    kode_mapel: kode_mapel,
-                    kelas: kelas
+                    kelas: kelas,
+                    nisn: nisn
                 }
             }
         );
@@ -201,10 +206,10 @@ async function updateStatusSoal(kode_mapel, kode_soal, kelas){
     }
 }
 
-async function getSoalByKodeAndNomor(kode_soal, nomor_soal, kelas){
+async function getSoalByKodeAndNomor(id_mapel, nomor_soal, kelas){
     try {
         const existingSoal = await db.soal.findOne({
-            where: {nomor_soal, kode_mapel: kode_soal, kelas
+            where: {nomor_soal, kode_mapel: id_mapel, kelas
             },
             raw: true,
         });
@@ -215,7 +220,7 @@ async function getSoalByKodeAndNomor(kode_soal, nomor_soal, kelas){
     }
 }
 
-async function updateTextSoal(text_soal, kode_soal, nomor_soal, kelas, skor){
+async function updateTextSoal(text_soal, id_mapel, nomor_soal, kelas, skor){
     try {
         console.log('nilai skor payload: ', skor);
         let skors = skor != null ? skor : 0;
@@ -227,7 +232,7 @@ async function updateTextSoal(text_soal, kode_soal, nomor_soal, kelas, skor){
             },
         {
             where: {
-                kode_soal,
+                kode_mapel: id_mapel,
                 nomor_soal,
                 kelas
             }
@@ -241,11 +246,11 @@ async function updateTextSoal(text_soal, kode_soal, nomor_soal, kelas, skor){
     }
 }
 
-async function deletePilihanGanda(kode_soal, nomor_soal, kelas){
+async function deletePilihanGanda(kode_mapel, nomor_soal, kelas){
     try {
         await db.pilihan_ganda.destroy({
             where: {
-                kode_soal,
+                kode_mapel,
                 nomor_soal,
                 kelas
             }
@@ -256,11 +261,11 @@ async function deletePilihanGanda(kode_soal, nomor_soal, kelas){
     }
 }
 
-async function getJawabanEssay(kode_soal, jenis_soal, nomor_soal, kelas){
+async function getJawabanEssay(kode_mapel, jenis_soal, nomor_soal, kelas){
     try {
         const jawabanessay = await db.essay.findOne({
             where:{
-                kode_soal,
+                kode_mapel,
                 jenis_soal,
                 nomor_soal,
                 kelas
@@ -275,13 +280,13 @@ async function getJawabanEssay(kode_soal, jenis_soal, nomor_soal, kelas){
     }
 }
 
-async function updateJawabanEssay(jawaban, kode_soal, jenis_soal, nomor_soal, kelas){
+async function updateJawabanEssay(jawaban, kode_mapel, jenis_soal, nomor_soal, kelas){
     try {
         await db.essay.update(
             {jawaban},
             {
                 where:{
-                    kode_soal,
+                    kode_mapel,
                     jenis_soal,
                     nomor_soal,
                     kelas
@@ -294,11 +299,11 @@ async function updateJawabanEssay(jawaban, kode_soal, jenis_soal, nomor_soal, ke
     }
 }
 
-async function getJawabanEssayB(kode_soal, nomor_soal, kelas){
+async function getJawabanEssayB(kode_mapel, nomor_soal, kelas){
     try {
         const jawabanEssay = await db.essay.findOne({
             where: {
-                kode_soal,
+                kode_mapel,
                 nomor_soal,
                 kelas
             }, 
@@ -342,6 +347,227 @@ async function deleteSoal(nomor_soal, kode_mapel, jenis_soal, kelas){
     }
 }
 
+async function getSkor(nomor_soal, kode_mapel, kelas, pilihan_benar){
+    try {
+        const getSkor = await db.pilihan_ganda.findOne({
+            where: {
+                nomor_soal, kode_mapel, kelas, pilihan_benar
+            },
+            raw: true,
+        });
+        return getSkor;
+    } catch (error) {
+        console.error('Error get skor');
+        throw new error.message;
+    }
+}
+
+async function getDataJawabanSiswa(kelas, idmapel, nisn, kode_guru){
+    try {
+        const result = await db.sequelize.query(`
+            SELECT a.id, a.nama_siswa, a.kelas, a.nisn, c.nama_mapel, a.idmapel, a.nomor_soal, a.jenis_soal, a.text_soal, a.jawaban, a.skor
+            FROM data_jawaban_siswa a
+            JOIN mapel c ON c.idmapel = a.idmapel
+            JOIN account_guru_karyawan b ON b.kode_guru = c.kode_guru
+            WHERE c.idmapel = :idmapel
+            AND a.kelas = :kelas
+            AND a.nisn = :nisn
+            AND b.kode_guru = :kode_guru`,
+            {
+                replacements: {
+                idmapel: idmapel,
+                kelas: kelas,
+                nisn: nisn,
+                kode_guru: kode_guru
+            },
+            type: QueryTypes.SELECT
+        });
+        return result;
+    } catch (error) {
+        console.error('error get data jawaban siswa');
+        throw error;
+    }
+}
+
+async function updateSkorJawabanSiswa(kelas, nisn, kode_soal, nomor_soal, skor){
+    try {
+        await db.data_jawaban_siswa.update(
+            {skor: skor},
+            {
+                where:{
+                    kelas,
+                    nisn,
+                    kode_soal,
+                    nomor_soal
+                }
+            }
+        )
+    } catch (error) {
+        console.error('Error update skor jawaban siswa');
+        throw error;
+    }
+}
+
+async function sumSkorJawabanSiswa(nisn, idmapel, kode_soal){
+    try {
+        const query = `select 
+                sum(skor) skor,
+                b.nama_mapel,
+                c.nama ,
+                c.rombel_saat_ini 
+                from data_jawaban_siswa a 
+                join mapel b on 
+                a.idmapel = b.idmapel
+                join data_induk c on
+                a.nisn = c.nisn 
+                where c.nisn = :nisn
+                and a.idmapel = :idmapel`;
+        const responseData = await db.sequelize.query(query, {
+            replacements: {nisn,  idmapel, kode_soal},
+            type: db.Sequelize.QueryTypes.SELECT,
+        });
+        return responseData;
+    } catch (error) {
+        console.error('Error Get Sum Skor');
+        throw error;
+    }
+}
+
+async function insertPenilaianSiswa(nama_siswa, kelas, nisn, mata_pelajaran, nilai) {
+    try {
+        await db.penilaian.create({
+            nama_siswa,
+            kelas,
+            nisn,
+            mata_pelajaran,
+            nilai,
+            submit_date: new Date
+        });
+    } catch (error) {
+        console.error('Error when inserting data ');
+        throw error;
+    }
+}
+
+async function getAnalisisJawabanSiswa(kelas, idmapel){
+    try {
+        const query = `SELECT
+                            a.nomor_soal AS no, -- Gantilah dengan ID yang sesuai atau tambahkan kolom yang diperlukan
+                            a.nama_siswa AS nama,
+                            a.kelas,
+                            b.nama_mapel AS soal,
+                            GROUP_CONCAT(a.jawaban ORDER BY a.nomor_soal) AS jawaban
+                        FROM
+                            data_jawaban_siswa a
+                        JOIN
+                            mapel b ON a.idmapel = b.idmapel
+                            and a.kelas = b.kelas       
+                        WHERE
+                            a.kelas = :kelas
+                            and a.idmapel = :idmapel
+                        GROUP BY
+                            a.nama_siswa, a.kelas, b.nama_mapel`;
+        const responseData = await db.sequelize.query(query, {
+            replacements: {kelas, idmapel},
+            type: db.Sequelize.QueryTypes.SELECT,
+        });
+
+        const query2 = `SELECT
+                distinct (a.nomor_soal) AS no
+            FROM
+                data_jawaban_siswa a
+            JOIN
+                mapel b ON a.idmapel = b.idmapel
+                and a.kelas = b.kelas
+            WHERE
+                a.kelas = :kelas
+                and a.idmapel = :idmapel`;
+        const responseData2 = await db.sequelize.query(query2, {
+        replacements: {kelas, idmapel},
+        type: db.Sequelize.QueryTypes.SELECT,
+        });
+
+        // Proses responseData untuk mengubah jawaban dan kategori menjadi array
+        const formattedResponse = responseData.map((row, index) => ({
+            no: row.no, // No from responseData
+            nama: row.nama,
+            kelas: row.kelas,
+            mapel: row.soal,
+            jawaban: row.jawaban
+                ? row.jawaban.split(",").map((answer, idx) => ({
+                    no: responseData2[idx]?.no || idx + 1, // Take nomor_soal from responseData2, default to idx if not found
+                    jawaban: answer.trim().toUpperCase() // Convert to uppercase if needed
+                }))
+                : []
+        }));
+
+        return formattedResponse;
+    } catch (error) {
+        console.error('Error Analisis Jawaban Siswa');
+        throw error;
+    }
+}
+
+async function kategoriSoal(kelas, idmapel){
+    try {
+        const  query = `SELECT 
+                            a.nomor_soal,
+                            CASE 
+                                WHEN (COUNT(CASE WHEN a.skor = 10 THEN 1 END) * 100.0 / COUNT(*)) > 70 THEN 'mudah'
+                                WHEN (COUNT(CASE WHEN a.skor = 10 THEN 1 END) * 100.0 / COUNT(*)) BETWEEN 50 AND 70 THEN 'sedang'
+                                ELSE 'sulit'
+                            END AS kategori_soal,
+                            COUNT(a.skor) AS total_responses,
+                            COUNT(CASE WHEN a.skor = 10 THEN 1 END) AS correct_responses
+                        FROM 
+                            data_jawaban_siswa a
+                        WHERE 
+                            a.kelas = :kelas
+                            and a.idmapel = :idmapel
+                        GROUP BY 
+                            a.nomor_soal;`;
+        const responseData = await db.sequelize.query(query, {
+            replacements: {kelas, idmapel},
+            type: db.Sequelize.QueryTypes.SELECT,
+        });
+
+        return responseData;
+    } catch (error) {
+        console.error('Error kategori soal');
+        throw error;
+    }
+}
+
+async function insertAnalisisJawabanSiswa(kelas, kode_soal, nomor_soal, jenis_soal, kategori_soal) {
+    try {
+        await db.analisis_jawaban.create({
+            kelas,
+            kode_soal,
+            nomor_soal,
+            jenis_soal,
+            kategori_soal,
+        });
+    } catch (error) {
+        console.error('Error when inserting data ');
+        throw error;
+    }
+}
+
+async function getKategoriJawaban(kelas, idmapel) {
+    try {
+        const kategori = await db.analisis_jawaban.findAll({
+            where: {kelas, kode_soal: idmapel},
+            attributes: ['nomor_soal', 'kategori_soal'],
+            raw: true
+        });
+        return kategori;
+    } catch (error) {
+        console.error('Error get kategori jawaban');
+        throw error;
+    }
+}
+
+
 module.exports = {
     insertIntoSoal,
     insertIntoPilihan,
@@ -361,5 +587,14 @@ module.exports = {
     updateJawabanEssay,
     getJawabanEssay,
     deleteEssay,
-    deleteSoal
+    deleteSoal,
+    getSkor,
+    getDataJawabanSiswa,
+    updateSkorJawabanSiswa,
+    sumSkorJawabanSiswa,
+    insertPenilaianSiswa,
+    getAnalisisJawabanSiswa,
+    kategoriSoal,
+    insertAnalisisJawabanSiswa,
+    getKategoriJawaban
 }

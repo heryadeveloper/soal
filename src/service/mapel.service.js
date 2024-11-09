@@ -1,9 +1,9 @@
 const { mapelRepository } = require("../repository");
 
 async function insertDataMapel(req){
-    const {idmapel, nama_mapel, kelas} = req.body;
+    const {idmapel, nama_mapel, kelas, guru_pengampu, kode_guru} = req.body;
     try {
-        await mapelRepository.insertDataMapel(idmapel, nama_mapel, kelas);
+        await mapelRepository.insertDataMapel(idmapel, nama_mapel, kelas, guru_pengampu, kode_guru);
         return {nama_mapel, kelas};
     } catch (error) {
         console.error('Error in service mapel');
@@ -21,7 +21,19 @@ async function getDataMapel(){
     }
 }
 
+async function getMapelForGuru(req) {
+    const {kode_guru} = req.query;
+    try {
+        const responseData = await mapelRepository.getMapelForGuru(kode_guru);
+        return responseData;
+    } catch (error) {
+        console.error('Error in service when get mapel');
+        throw error;
+    }
+}
+
 module.exports = {
     insertDataMapel,
-    getDataMapel
+    getDataMapel,
+    getMapelForGuru
 }

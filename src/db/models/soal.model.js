@@ -7,10 +7,6 @@ module.exports = (sequelize, DataType) => {
                 primaryKey: true,
                 autoIncrement: true,
             },
-            kode_soal:{
-                type: DataType.INTEGER,
-                allowNull: false,
-            },
             nomor_soal:{
                 type: DataType.INTEGER,
                 allowNull: false,

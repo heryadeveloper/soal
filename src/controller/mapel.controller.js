@@ -21,7 +21,17 @@ const getDataMapel = catchAcync(async(req, res) => {
     }
 })
 
+const getMapelForGuru = catchAcync(async(req, res) => {
+    const getMapelForGuru = await mapelService.getMapelForGuru(req);
+    if (getMapelForGuru) {
+        res.send(responseInfo('Success Get Data Mapel', getMapelForGuru));
+    } else {
+        res.send(expectationFailed('Something Error', null));
+    }
+})
+
 module.exports = {
     inputMapel,
-    getDataMapel
+    getDataMapel,
+    getMapelForGuru
 }

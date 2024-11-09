@@ -43,7 +43,6 @@ const getEssay = catchAsync(async( req, res) => {
 const inputSoal = catchAsync(async(req, res, next) => {
     try {
         const inputSoals = await soalService.inputSoalHandler(req);
-        console.log('input soal log: ', inputSoals);
         if (inputSoals) {
             res.send(responseInfo('Success Insert Soal', inputSoals));
         } else {
@@ -66,7 +65,7 @@ const inputJawabanSiswa = catchAsync(async(req, res) => {
 
 const getAvailableTest = catchAsync(async( req, res) => {
     const availableTest = await soalService.getAvailableTest(req);
-    console.log('controller available: ', availableTest);
+    console.log('available test', availableTest);
     if (availableTest.length > 0) {
         res.send(responseInfo('Available Test', availableTest));
     } else if (availableTest.length == 0){
@@ -78,7 +77,6 @@ const getAvailableTest = catchAsync(async( req, res) => {
 
 const deleteSoal = catchAsync(async(req, res) => {
     const resDeleteSoal = await soalService.deleteSoal(req);
-    console.log('delete log: ', resDeleteSoal);
     if (resDeleteSoal.nomor_soal != null) {
         res.send(responseInfo('Success Delete Soal', resDeleteSoal));
     } else {
@@ -86,6 +84,50 @@ const deleteSoal = catchAsync(async(req, res) => {
     }
 })
 
+const getDataJawabanSiswa = catchAsync(async(req, res) => {
+    const dataJawabanSisa = await soalService.getDataJawabanSiswa(req);
+    if (dataJawabanSisa) {
+        res.send(responseInfo('Success get data jawaban siswa', dataJawabanSisa));
+    } else {
+        res.send(expectationFailed('Something when wrong', null));
+    }
+})
+
+const updateSkorJawabanSiswa = catchAsync(async(req, res) => {
+    const statusUpdate = await soalService.updateSkorJawabanSiswa(req);
+    if (statusUpdate) {
+        res.send(responseInfo('Success Updating Skor Jawaban Siswa', statusUpdate));
+    } else {
+        res.send(expectationFailed('Something error', null));
+    }
+})
+
+const sumSkorJawabanSiswa = catchAsync(async(req, res) => {
+    const sumSkor = await soalService.sumSkorJawabanSiswa(req);
+    if (sumSkor) {
+        res.send(responseInfo('Success Calculate Skor', sumSkor));
+    } else {
+        res.send(expectationFailed('Something error', null));
+    }
+})
+
+const analisisJawaban = catchAsync(async(req, res) => {
+    const analisisJawaban = await soalService.analisisJawabanSiswa(req);
+    if (analisisJawaban) {
+        res.send(responseInfo('Success Calculate Skor', analisisJawaban));
+    } else {
+        res.send(expectationFailed('Something error', null));
+    }
+})
+
+const insertAnalisisJawabanSiswa = catchAsync(async(req, res) => {
+    const insertAnalisisJawaban = await soalService.insertAnalisisJawabanSiswa(req);
+    if (insertAnalisisJawaban) {
+        res.send(responseInfo('Success Insert Analisis Jawaban Siswa', insertAnalisisJawaban));
+    } else {
+        res.send(expectationFailed('Something Error', null));
+    }
+})
 module.exports = {
     getSoal,
     getSoalEssay,
@@ -94,5 +136,10 @@ module.exports = {
     inputSoal,
     inputJawabanSiswa,
     getAvailableTest,
-    deleteSoal
+    deleteSoal,
+    getDataJawabanSiswa,
+    updateSkorJawabanSiswa,
+    sumSkorJawabanSiswa,
+    analisisJawaban,
+    insertAnalisisJawabanSiswa
 }

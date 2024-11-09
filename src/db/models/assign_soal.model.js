@@ -1,41 +1,36 @@
-module.exports = (sequelize, DataType)=> {
-    const mapel = sequelize.define(
-        'mapel',
+module.exports = (sequelize, DataType) => {
+    const assignSoal = sequelize.define(
+        'assign_soal',
         {
             id:{
                 type:DataType.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
             },
-            idmapel:{
+            kd_mapel:{
                 type:DataType.INTEGER,
-                allowNull:false,
+                allowNull: false
             },
-            nama_mapel:{
+            kelas: {
                 type:DataType.STRING,
                 allowNull: false,
             },
-            kelas:{
+            status_available:{
                 type:DataType.STRING,
-                allowNull:false,
+                allowNull: false
             },
-            created_at:{
+            created_date:{
                 type:DataType.DATE,
                 defaultValue: DataType.NOW,
                 allowNull: false
             },
-            guru_pengampu:{
+            nisn:{
                 type:DataType.STRING,
-                allowNull:false,
-            },
-            kode_guru:{
-                type:DataType.STRING,
-                allowNull:false,
+                allowNull: false
             }
         },{
-            tableName:'mapel'
+            tableName:'assign_soal'
         }
     );
-
-    return mapel;
+    return assignSoal;
 }

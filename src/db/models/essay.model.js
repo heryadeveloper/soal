@@ -7,7 +7,7 @@ module.exports = (sequelize, DataType)=> {
                 primaryKey: true,
                 autoIncrement: true,
             },
-            kode_soal:{
+            kode_mapel:{
                 type:DataType.INTEGER,
                 allowNull:false,
             },

@@ -77,7 +77,7 @@ const updateSkorJawabanSiswa = {
                 skor: Joi.number().required(),
                 kelas: Joi.string().required(),
                 nisn: Joi.string().required(),
-                kode_soal: Joi.number().required(),
+                idmapel: Joi.number().required(),
                 nomor_soal: Joi.number().required()
             })
         ).required()

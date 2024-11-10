@@ -283,9 +283,9 @@ async function updateSkorJawabanSiswa(req) {
         const { payload } = req.body;
         // Gunakan Promise.all untuk menunggu semua update selesai
         await Promise.all(payload.map(async (payloads) => {
-            const { skor, kelas, nisn, kode_soal, nomor_soal } = payloads;
+            const { skor, kelas, nisn, idmapel, nomor_soal } = payloads;
             // Lakukan update untuk setiap jawaban siswa
-            await soalRepository.updateSkorJawabanSiswa(kelas, nisn, kode_soal, nomor_soal, skor);
+            await soalRepository.updateSkorJawabanSiswa(kelas, nisn, idmapel, nomor_soal, skor);
         }));
         return {
             responseData: 'Success Update Skor Siswa'

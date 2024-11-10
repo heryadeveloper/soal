@@ -389,7 +389,7 @@ async function getDataJawabanSiswa(kelas, idmapel, nisn, kode_guru){
     }
 }
 
-async function updateSkorJawabanSiswa(kelas, nisn, kode_soal, nomor_soal, skor){
+async function updateSkorJawabanSiswa(kelas, nisn, idmapel, nomor_soal, skor){
     try {
         await db.data_jawaban_siswa.update(
             {skor: skor},
@@ -397,7 +397,7 @@ async function updateSkorJawabanSiswa(kelas, nisn, kode_soal, nomor_soal, skor){
                 where:{
                     kelas,
                     nisn,
-                    kode_soal,
+                    idmapel,
                     nomor_soal
                 }
             }
@@ -465,6 +465,7 @@ async function getAnalisisJawabanSiswa(kelas, idmapel){
                         WHERE
                             a.kelas = :kelas
                             and a.idmapel = :idmapel
+                            and a.jenis_soal =0
                         GROUP BY
                             a.nama_siswa, a.kelas, b.nama_mapel`;
         const responseData = await db.sequelize.query(query, {
@@ -524,6 +525,7 @@ async function kategoriSoal(kelas, idmapel){
                         WHERE 
                             a.kelas = :kelas
                             and a.idmapel = :idmapel
+                            and a.jenis_soal = 0
                         GROUP BY 
                             a.nomor_soal;`;
         const responseData = await db.sequelize.query(query, {

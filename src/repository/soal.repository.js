@@ -175,14 +175,6 @@ async function getAvailableTest(kelas, nisn) {
             type: QueryTypes.SELECT
         });
         return result;
-        // const dataAvail = await db.assign_soal.findOne({
-        //     where : {
-        //         kelas,
-        //         nisn
-        //     },
-        //     raw: true,
-        // })
-        // return dataAvail;
     }catch(error){
         console.error('Error when get available test');
         throw error;

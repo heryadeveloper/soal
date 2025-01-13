@@ -4,7 +4,11 @@ const inputMapel = {
     body: Joi.object().keys({
         idmapel: Joi.number(),
         nama_mapel: Joi.string(),
-        kelas: Joi.string(),
+        kelas: Joi.array().items(
+            Joi.object().keys({
+                kelas_assign: Joi.string().required(),
+            })
+        ),
         guru_pengampu: Joi.string(),
         kode_guru: Joi.string(),
     })
@@ -14,7 +18,11 @@ const inputSoal = {
     body: Joi.object().keys({
         nama_mapel: Joi.string().required(),
         id_mapel: Joi.number().required(),
-        kelas: Joi.string().required(),
+        kelas: Joi.array().items(
+            Joi.object().keys({
+                kelas_assign: Joi.string().required(),
+            })
+        ),
         // kode_soal: Joi.number().required(),
         nomor_soal: Joi.number().required(),
         jenis_soal: Joi.number().valid(0, 1).required(), // 0 untuk pilihan ganda, 1 untuk essay
@@ -91,11 +99,25 @@ const analisisJawabanSiswa = {
     })
 }
 
+
+const deleteMapel = {
+    body: Joi.object().keys({
+        nama_mapel: Joi.string().required(),
+        kelas: Joi.array().items(
+            Joi.object({
+                kelas_assign: Joi.string().required()
+            })
+        ),
+        guru_pengampu: Joi.string().required(),
+    })
+}
+
 module.exports = {
     inputMapel,
     inputSoal,
     inputJawabanSiswa,
     deleteSoal,
     updateSkorJawabanSiswa,
-    analisisJawabanSiswa
+    analisisJawabanSiswa,
+    deleteMapel
 }

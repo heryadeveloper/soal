@@ -3,8 +3,13 @@ const { mapelRepository } = require("../repository");
 async function insertDataMapel(req){
     const {idmapel, nama_mapel, kelas, guru_pengampu, kode_guru} = req.body;
     try {
-        await mapelRepository.insertDataMapel(idmapel, nama_mapel, kelas, guru_pengampu, kode_guru);
-        return {nama_mapel, kelas};
+        let kelass;
+        for (const kelasAssign of kelas){
+            kelass = kelasAssign.kelas_assign;
+            await mapelRepository.insertDataMapel(idmapel, nama_mapel, kelasAssign.kelas_assign, guru_pengampu, kode_guru);
+        }
+        return {nama_mapel, kelass};
+        
     } catch (error) {
         console.error('Error in service mapel');
         throw error;
@@ -32,8 +37,24 @@ async function getMapelForGuru(req) {
     }
 }
 
+async function deleteMapel(req) {
+    try {
+        const {nama_mapel, kelas, guru_pengampu} = req.body;
+        let kelasDelete;
+        for (const kelass of kelas){
+            kelasDelete = kelass.kelas_assign;
+            await mapelRepository.deleteMapel(nama_mapel, kelass.kelas_assign, guru_pengampu);
+        }
+        return kelasDelete;
+    } catch (error) {
+        console.error('Error delete mapel');
+        throw error;
+    }
+}
+
 module.exports = {
     insertDataMapel,
     getDataMapel,
-    getMapelForGuru
+    getMapelForGuru,
+    deleteMapel
 }

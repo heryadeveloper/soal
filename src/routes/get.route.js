@@ -21,7 +21,8 @@ const routes = [
     { path: '/updateSkorSiswa', method: 'post', validation: mapelValidation.updateSkorJawabanSiswa, handler: soalController.updateSkorJawabanSiswa},
     { path: '/sumSkorSiswa', method: 'get', handler: soalController.sumSkorJawabanSiswa},
     { path: '/analisisJawaban', method: 'get', handler: soalController.analisisJawaban},
-    { path: '/insertAnalisisJawabanSiswa', method: 'post', validation: mapelValidation.analisisJawabanSiswa, handler: soalController.insertAnalisisJawabanSiswa}
+    { path: '/insertAnalisisJawabanSiswa', method: 'post', validation: mapelValidation.analisisJawabanSiswa, handler: soalController.insertAnalisisJawabanSiswa},
+    { path: '/deleteMapel', method: 'post', validation: mapelValidation.deleteMapel, handler: mapelController.deleteMapel},
 ];
 
 routes.forEach(route => {

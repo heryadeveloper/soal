@@ -30,8 +30,18 @@ const getMapelForGuru = catchAcync(async(req, res) => {
     }
 })
 
+const deleteMapel = catchAcync(async(req, res) => {
+    const deleteMapels = await mapelService.deleteMapel(req);
+    if (deleteMapels) {
+        res.send(responseInfo('Success Delete Mapel', deleteMapels));
+    } else {
+        res.send(expectationFailed('Something Error', null));
+    }
+})
+
 module.exports = {
     inputMapel,
     getDataMapel,
-    getMapelForGuru
+    getMapelForGuru,
+    deleteMapel
 }

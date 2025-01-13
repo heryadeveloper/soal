@@ -93,71 +93,81 @@ async function inputSoalHandler(req){
         const {nama_mapel, id_mapel, kelas, nomor_soal, jenis_soal, available_on, skor, text_soal, text_jawaban} = req.body;
         // get mapel, if not in table, insert first
         const mapelInTable = await mapelRepository.getDataMapelForOne(id_mapel);
-        const assignStatus = await mapelRepository.getMapelAssignForClass(id_mapel, kelas);
-
+        
         if (!mapelInTable) {
             // insert parent table (mapel)
-            await mapelRepository.insertDataMapel(id_mapel, nama_mapel, kelas);
+            const dataMapel = kelas.map(kelassAssign =>({
+                idmapel: id_mapel,
+                nama_mapel: nama_mapel,
+                kelas: kelassAssign.kelas_assign,
+                created_date: new Date,
+            }))
+            // await mapelRepository.insertDataMapel(id_mapel, nama_mapel, kelas);
+            await mapelRepository.insertMapelBulkKelas(dataMapel);
 
         } else {
-
-            const existingSoal = await soalRepository.getSoalByKodeAndNomor(id_mapel, nomor_soal, kelas);
             let soalInput;
-            if (existingSoal) {
-                console.log('existing')
-                // if soal exist update the soal
-                soalInput = await soalRepository.updateTextSoal(text_soal, id_mapel, nomor_soal, kelas, skor);
-            } else {
-                 // insert into child 1 (soal)
-                console.log('baru')
-                soalInput = await soalRepository.insertIntoSoal(nomor_soal, id_mapel, kelas, text_soal, jenis_soal, available_on, skor);
+            for (const kelassAssign of kelas){
+                const existingSoal = await soalRepository.getSoalByKodeAndNomor(id_mapel, nomor_soal, kelassAssign.kelas_assign);
+                if (existingSoal) {
+                    console.log('existing')
+                    // if soal exist update the soal
+                    soalInput = await soalRepository.updateTextSoal(text_soal, id_mapel, nomor_soal, kelassAssign.kelas_assign, skor);
+                } else {
+                    // insert into child 1 (soal)
+                    console.log('baru')
+                    soalInput = await soalRepository.insertIntoSoal(nomor_soal, id_mapel, kelassAssign.kelas_assign, text_soal, jenis_soal, available_on, skor);
+                }
+
+                //logic save jawaban using pilgan or essay
+                if (jenis_soal === 0) {
+                    // save jawaban ke table pilihan
+                    const jawabanPilihanGanda = text_jawaban.pilihan_ganda.map(jawaban =>({
+                        kode_mapel: id_mapel,
+                        nomor_soal: nomor_soal,
+                        pilihan: jawaban.pilihan,
+                        idx_pilihan: jawaban.idx_pilihan,
+                        kelas: kelassAssign.kelas_assign,
+                        pilihan_benar: jawaban.pilihan_benar,
+                        skor: jawaban.skor
+                    }))
+
+                    console.log('delete pilihan');
+                    // first, delete existing pilihan for the soal if it exist
+                    await soalRepository.deletePilihanGanda(id_mapel, nomor_soal, kelassAssign.kelas_assign);
+
+                    await soalRepository.insertIntoPilihanBulk(jawabanPilihanGanda);
+                } else {
+                    const existingEssayJawaban = await soalRepository.getJawabanEssay(id_mapel, jenis_soal, nomor_soal, kelassAssign.kelas_assign);
+                    
+                    console.log('data essay jawaban: ', existingEssayJawaban);
+
+                    if (existingEssayJawaban) {
+                        await soalRepository.updateJawabanEssay(text_jawaban.essay.jawaban, id_mapel, jenis_soal, nomor_soal, kelassAssign.kelas_assign);
+                    } else {
+                        console.log('insert jawaban essay: kode soal: ', id_mapel);
+                        await soalRepository.insertIntoJawaban(id_mapel, nomor_soal, text_jawaban.essay.jawaban, jenis_soal, kelassAssign.kelas_assign, text_jawaban.essay.skor);
+                    }
+                }
+
+                const assignStatus = await mapelRepository.getMapelAssignForClass(id_mapel, kelassAssign.kelas_assign);
+                //asiggn soal into kelas
+                if (!assignStatus) {
+                    //initiate data from data_induk first
+                    const nisnSiswa = await mapelRepository.getDataInduk(kelassAssign.kelas_assign, '2024');
+                    const nisnBulk = nisnSiswa.map(nisns => ({
+                        kd_mapel: id_mapel,
+                        kelas: kelassAssign.kelas_assign,
+                        status_available: 1,
+                        nisn: nisns.nisn
+                    }))
+                    console.log('nisn bulk : ', nisnBulk);
+                    await mapelRepository.insertAssignSoalBulk(nisnBulk);
+                    // await mapelRepository.insertAssignSoal(kode_soal, id_mapel, kelas, 1);
+                }
             }
-        //logic save jawaban using pilgan or essay
-        if (jenis_soal === 0) {
-            // save jawaban ke table pilihan
-            const jawabanPilihanGanda = text_jawaban.pilihan_ganda.map(jawaban =>({
-                kode_mapel: id_mapel,
-                nomor_soal: nomor_soal,
-                pilihan: jawaban.pilihan,
-                idx_pilihan: jawaban.idx_pilihan,
-                kelas: kelas,
-                pilihan_benar: jawaban.pilihan_benar,
-                skor: jawaban.skor
-            }))
-
-            console.log('delete pilihan');
-            // first, delete existing pilihan for the soal if it exist
-            await soalRepository.deletePilihanGanda(id_mapel, nomor_soal, kelas);
-
-            await soalRepository.insertIntoPilihanBulk(jawabanPilihanGanda);
-        } else {
-            const existingEssayJawaban = await soalRepository.getJawabanEssay(id_mapel, jenis_soal, nomor_soal, kelas);
-            
-            console.log('data essay jawaban: ', existingEssayJawaban);
-
-            if (existingEssayJawaban) {
-                await soalRepository.updateJawabanEssay(text_jawaban.essay.jawaban, id_mapel, jenis_soal, nomor_soal, kelas);
-            } else {
-                console.log('insert jawaban essay: kode soal: ', id_mapel);
-                await soalRepository.insertIntoJawaban(id_mapel, nomor_soal, text_jawaban.essay.jawaban, jenis_soal, kelas, text_jawaban.essay.skor);
-            }
-        }
-        //asiggn soal into kelas
-        if (!assignStatus) {
-            //initiate data from data_induk first
-            const nisnSiswa = await mapelRepository.getDataInduk(kelas, '2024');
-            const nisnBulk = nisnSiswa.map(nisns => ({
-                kd_mapel: id_mapel,
-                kelas: kelas,
-                status_available: 1,
-                nisn: nisns.nisn
-            }))
-            console.log('nisn bulk : ', nisnBulk);
-            await mapelRepository.insertAssignSoalBulk(nisnBulk);
-            // await mapelRepository.insertAssignSoal(kode_soal, id_mapel, kelas, 1);
-        }
-
-        return soalInput;
+        
+            return soalInput;
         }
         
     } catch (error) {

@@ -118,6 +118,39 @@ async function getDataInduk(rombel_saat_ini, tahun_ajaran){
         throw error;
     }
 }
+
+async function insertMapelBulkKelas(dataInsertBulkKelasMapel) {
+    try {
+        await db.mapel.bulkCreate(dataInsertBulkKelasMapel);
+    } catch (error) {
+        console.error('Error when inserting data', error);
+        throw error;
+    }
+}
+
+async function deleteMapel(nama_mapel, kelas, guru_pengampu){
+    try {
+        const resultData = await db.sequelize.query(
+            `delete from smknutulis.mapel where nama_mapel= :nama_mapel and kelas= :kelas and guru_pengampu= :guru_pengampu`,
+            {
+                replacements: {
+                    nama_mapel: nama_mapel,
+                    kelas: kelas,
+                    guru_pengampu: guru_pengampu
+                },
+                type: QueryTypes.DELETE
+            }
+        );
+
+        return{
+            resultData
+        };
+    } catch (error) {
+        console.error('Error delete mapel');
+        throw error;
+    }
+}
+
 module.exports = {
     insertDataMapel,
     getDataMapel,
@@ -126,5 +159,7 @@ module.exports = {
     getMapelAssignForClass,
     insertAssignSoal,
     insertAssignSoalBulk,
-    getDataInduk
+    getDataInduk,
+    insertMapelBulkKelas,
+    deleteMapel
 }

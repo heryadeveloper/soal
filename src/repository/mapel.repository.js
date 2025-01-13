@@ -131,7 +131,7 @@ async function insertMapelBulkKelas(dataInsertBulkKelasMapel) {
 async function deleteMapel(nama_mapel, kelas, guru_pengampu){
     try {
         const resultData = await db.sequelize.query(
-            `delete from smknutulis.mapel where nama_mapel= :nama_mapel and kelas= :kelas and guru_pengampu= :guru_pengampu`,
+            `delete from mapel where nama_mapel= :nama_mapel and kelas= :kelas and guru_pengampu= :guru_pengampu`,
             {
                 replacements: {
                     nama_mapel: nama_mapel,

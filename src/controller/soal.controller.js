@@ -128,6 +128,15 @@ const insertAnalisisJawabanSiswa = catchAsync(async(req, res) => {
         res.send(expectationFailed('Something Error', null));
     }
 })
+
+const insertSoalMencocokan = catchAsync(async(req, res) => {
+    const insertSoalMencocokan = await soalService.inserSoalMencocokan(req);
+    if (insertSoalMencocokan) {
+        res.send(responseInfo('Success Insert Soal Mencocokan', insertSoalMencocokan));
+    } else {
+        res.send(expectationFailed('Something Error', null));
+    }
+})
 module.exports = {
     getSoal,
     getSoalEssay,
@@ -141,5 +150,6 @@ module.exports = {
     updateSkorJawabanSiswa,
     sumSkorJawabanSiswa,
     analisisJawaban,
-    insertAnalisisJawabanSiswa
+    insertAnalisisJawabanSiswa,
+    insertSoalMencocokan
 }

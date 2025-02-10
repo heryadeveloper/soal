@@ -13,7 +13,10 @@ async function getSoal(req){
             getSoals.map(async (soal) => {
                 let pilihan = null;
                 let jawabanEssay = null
-                
+                let comparation = null
+                let trueandfalse = null
+                let matchingquestion = null
+                let matchinganswer = null
                 // Hanya ambil pilihan jika soal jenisnya pilihan ganda (jenis_soal === 0)
                 if (soal.jenis_soal === 0) {
                     pilihan = await soalRepository.getPilgan(soal.kode_mapel,soal.nomor_soal, soal.kelas);
@@ -25,13 +28,40 @@ async function getSoal(req){
                         pilihan_benar: jawaban.pilihan_benar,
                         skor: jawaban.skor
                     }));
-                } else {
+                }
+                else if (soal.jenis_soal === 2) {
+                    // comparation = await so/alRepository.getMatchingAnswer(soal.kode_mapel, soal.jenis_soal, soal.kelas)
+                    matchingquestion = await soalRepository.getMatchingQuestion(soal.kode_mapel, soal.kelas);
+                    matchinganswer = await soalRepository.getMatchingAnswered(soal.kelas);
+                    console.log('matching answere', matchinganswer);
+                    
+                    const pernyataan = matchingquestion.map((result) => ({
+                        id: result.id,
+                        nomor_soal: result.nomor_soal,
+                        text_soal: result.text_soal,
+                        id_jawaban_benar: result.id_jawaban_benar
+                    }));
+
+                    const jawaban = matchinganswer.map((result) => ({
+                        id: result.id,
+                        nomor: result.nomor,
+                        jawaban: result.jawaban,
+                        id_jawaban_benar: result.id_jawaban_benar
+                    })).sort(() => Math.random() - 0.5);
+
+                    comparation = [{pernyataan, jawaban}];
+                }
+                // else if (soal.jenis_soal === 3) {
+                //     trueandfalse = await soalRepository.getBenarsalah(soal.kode_mapel, soal.nomor_soal, soal.kelas);
+                // }
+                else {
                     jawabanEssay = await soalRepository.getJawabanEssayB(soal.kode_mapel,soal.nomor_soal, soal.kelas);
                 }
 
                 const pilihan_ganda = soal.jenis_soal === 0 && pilihan != null ? pilihan : null;
                 const jawaban_essay = soal.jenis_soal === 1 && jawabanEssay != null ? jawabanEssay : null;
-
+                const menjodohkan = soal.jenis_soal === 2 && comparation != null ? comparation : null;
+                const benarsalah = soal.jenis_soal === 3 && trueandfalse != null ? trueandfalse : null;
                 
                 return {
                     nama_mapel: mapelInTable.nama_mapel,
@@ -43,7 +73,9 @@ async function getSoal(req){
                     text_soal: soal.text_soal,
                     skor: soal.skor,
                     pilihan_ganda,
-                    jawaban_essay
+                    jawaban_essay,
+                    menjodohkan,
+                    benarsalah
                 };
             })
         );
@@ -90,10 +122,10 @@ async function getEssay(req){
 
 async function inputSoalHandler(req){
     try {
-        const {nama_mapel, id_mapel, kelas, nomor_soal, jenis_soal, available_on, skor, text_soal, text_jawaban} = req.body;
+        const {tahun_ajaran, nama_mapel, id_mapel, kelas, nomor_soal, jenis_soal, available_on, skor, text_soal, text_jawaban} = req.body;
         // get mapel, if not in table, insert first
         const mapelInTable = await mapelRepository.getDataMapelForOne(id_mapel);
-        
+    
         if (!mapelInTable) {
             // insert parent table (mapel)
             const dataMapel = kelas.map(kelassAssign =>({
@@ -102,13 +134,16 @@ async function inputSoalHandler(req){
                 kelas: kelassAssign.kelas_assign,
                 created_date: new Date,
             }))
-            // await mapelRepository.insertDataMapel(id_mapel, nama_mapel, kelas);
             await mapelRepository.insertMapelBulkKelas(dataMapel);
 
         } else {
             let soalInput;
+            console.log('kelas', kelas);
             for (const kelassAssign of kelas){
+                console.log('kelas', kelassAssign);
                 const existingSoal = await soalRepository.getSoalByKodeAndNomor(id_mapel, nomor_soal, kelassAssign.kelas_assign);
+                console.log('existing soal', existingSoal);
+                
                 if (existingSoal) {
                     console.log('existing')
                     // if soal exist update the soal
@@ -137,7 +172,54 @@ async function inputSoalHandler(req){
                     await soalRepository.deletePilihanGanda(id_mapel, nomor_soal, kelassAssign.kelas_assign);
 
                     await soalRepository.insertIntoPilihanBulk(jawabanPilihanGanda);
-                } else {
+                } else if (jenis_soal === 2) {
+                    //cek no nya sama atau tidak dengan no mencocokan
+                    //jika sama save ke table question_matcher
+                    //jika tidak sama ke table question_answer
+
+
+                    //save for mencocokan
+                    console.log('mencocokan');
+                    const listMencocokanSave = text_jawaban.mencocokan
+                    .filter(payload => payload.no !== nomor_soal)
+                    .map(payload => ({
+                        nomor_soal: payload.no,
+                        jenis_soal: 2,
+                        jawaban: payload.jawaban,
+                        skor: payload.skor,
+                        created_at: new Date(),
+                        kelas: kelassAssign.kelas_assign
+                    }));
+
+                    if (listMencocokanSave.length > 0) {
+                        console.log('insert mencocokan', listMencocokanSave);
+                        await soalRepository.insertIntomatchingAnswerBulk(listMencocokanSave);
+                    }
+                        console.log('insert into matching_question');
+                        const jawaban_benar_payload = text_jawaban.mencocokan
+                            .filter(payload => payload.no === nomor_soal)
+                            .map(payload => ({
+                                jawaban: payload.jawaban,
+                                skor: payload.skor
+                            }));
+
+                            if (jawaban_benar_payload.length > 0) {
+                                console.log('jawaban : ', jawaban_benar_payload);
+                                console.log('text soal : ', text_soal);
+                                await soalRepository.insertMatchingQuestion(id_mapel, nomor_soal, jenis_soal, text_soal, jawaban_benar_payload[0].jawaban, kelassAssign.kelas_assign, jawaban_benar_payload[[0]].skor);
+                            }
+
+                }else if (jenis_soal === 3) {
+                    //save for true false
+                    const existingJawabanBenarSalah = await soalRepository.getJawabanBenarSalah(id_mapel, nomor_soal, jenis_soal, kelassAssign.kelas_assign);
+                    console.log('Input soal benar salah');
+                    if (existingJawabanBenarSalah) {
+                        await soalRepository.updateJawabanBenarSalah(text_jawaban.benarsalah.jawaban, id_mapel, jenis_soal, nomor_soal, kelassAssign.kelas_assign);
+                    } else {
+                        await soalRepository.insertJawabanBenarSalah(id_mapel, nomor_soal, jenis_soal, text_soal, text_jawaban.benarsalah.jawaban, kelassAssign.kelas_assign, skor);
+                    }
+
+                }else {
                     const existingEssayJawaban = await soalRepository.getJawabanEssay(id_mapel, jenis_soal, nomor_soal, kelassAssign.kelas_assign);
                     
                     console.log('data essay jawaban: ', existingEssayJawaban);
@@ -154,7 +236,7 @@ async function inputSoalHandler(req){
                 //asiggn soal into kelas
                 if (!assignStatus) {
                     //initiate data from data_induk first
-                    const nisnSiswa = await mapelRepository.getDataInduk(kelassAssign.kelas_assign, '2024');
+                    const nisnSiswa = await mapelRepository.getDataInduk(kelassAssign.kelas_assign, tahun_ajaran);
                     const nisnBulk = nisnSiswa.map(nisns => ({
                         kd_mapel: id_mapel,
                         kelas: kelassAssign.kelas_assign,
@@ -172,7 +254,7 @@ async function inputSoalHandler(req){
         
     } catch (error) {
         console.error('Error in service input soal handler', error);
-        throw new Error(error.message);
+        throw Error(error);
     }
 }
 
@@ -180,7 +262,65 @@ async function inputJawabanSiswa(req){
     try {
         const { payload } = req.body;
         const jawabanDataSiswaList = [];
-        for (let jawaban of payload){
+        // for (let jawaban of payload){
+        //     const {
+        //         nama_siswa,
+        //         nisn,
+        //         kelas,
+        //         idmapel,
+        //         nomor_soal,
+        //         jenis_soal,
+        //         text_soal,
+        //         jawaban: { idx_pilihan, text_jawaban, mencocokan, benarsalah },
+        //         skor
+        //     } = jawaban;
+
+        //     const jawabanObj = {
+        //         nama_siswa,
+        //         nisn,
+        //         kelas,
+        //         idmapel,
+        //         nomor_soal,
+        //         jenis_soal,
+        //         text_soal,
+        //         skor,
+        //     };
+
+        //      // Handle multiple-choice or essay based on jenis_soal
+        //     if (jenis_soal === 0) {
+        //         //jika jawaban pilihan ganda mesti cek terlebihh dahulu untuk point yang di dapatkan jika berhasil menjawab dengn benar
+        //         const getSkor = await soalRepository.getSkor(idmapel, nomor_soal, kelas, 1);
+        //         console.log('idx pilihan: ', idx_pilihan);
+        //         if (getSkor.idx_pilihan === idx_pilihan) {
+        //             jawabanObj.skor = getSkor.skor;
+        //         }else{
+        //             jawabanObj.skor = 0;
+        //         }
+
+        //         // Multiple-choice: Use idx_pilihan
+        //         jawabanObj.jawaban = idx_pilihan;
+        //     } else if (jenis_soal === 1) {
+        //         // Essay: Use text_jawaban
+        //         jawabanObj.jawaban = text_jawaban;
+        //     }
+        //     else if (jenis_soal === 2) {
+        //         for (const data of mencocokan){
+        //             jawabanObj.text_soal = data.pernyataan.text_soal;
+        //             jawabanObj.jawaban = data.jawaban.jawaban;
+        //         }
+        //     }
+        //     else if (jenis_soal === 3) {
+        //         // Essay: Use text_jawaban
+        //         jawabanObj.jawaban = benarsalah;
+        //     }
+
+        //     // Push each jawabanObj into the jawabanDataSiswa array
+        //     jawabanDataSiswaList.push(jawabanObj);
+
+        //     // update status soal into 1 after success insert jawab
+        //     await soalRepository.updateStatusSoal(kelas, nisn);
+        // }
+        for (let jawaban of payload) {
             const {
                 nama_siswa,
                 nisn,
@@ -189,45 +329,58 @@ async function inputJawabanSiswa(req){
                 nomor_soal,
                 jenis_soal,
                 text_soal,
-                jawaban: { idx_pilihan, text_jawaban },
+                jawaban: { idx_pilihan, text_jawaban, mencocokan, benarsalah },
                 skor
             } = jawaban;
-
-            const jawabanObj = {
-                nama_siswa,
-                nisn,
-                kelas,
-                idmapel,
-                nomor_soal,
-                jenis_soal,
-                text_soal,
-                skor,
-            };
-
-             // Handle multiple-choice or essay based on jenis_soal
-            if (jenis_soal === 0) {
-                //jika jawaban pilihan ganda mesti cek terlebihh dahulu untuk point yang di dapatkan jika berhasil menjawab dengn benar
-                const getSkor = await soalRepository.getSkor(idmapel, nomor_soal, kelas, 1);
-                console.log('idx pilihan: ', idx_pilihan);
-                if (getSkor.idx_pilihan === idx_pilihan) {
-                    jawabanObj.skor = getSkor.skor;
-                }else{
-                    jawabanObj.skor = 0;
+        
+            if (jenis_soal === 2) {
+                // Loop untuk setiap pernyataan dan jawaban yang cocok
+                for (let i = 0; i < mencocokan.pernyataan.length; i++) {
+                    const pernyataan = mencocokan.pernyataan[i];
+                    const jawabanObj = {
+                        nama_siswa,
+                        nisn,
+                        kelas,
+                        idmapel,
+                        nomor_soal: pernyataan.nomor_soal, // Ambil nomor soal dari pernyataan
+                        jenis_soal,
+                        text_soal: pernyataan.text_soal, // Ambil teks soal dari pernyataan
+                        jawaban: mencocokan.jawaban[i]?.jawaban || "", // Pastikan jawaban ada
+                        skor
+                    };
+        
+                    jawabanDataSiswaList.push(jawabanObj);
                 }
-
-                // Multiple-choice: Use idx_pilihan
-                jawabanObj.jawaban = idx_pilihan;
-            } else if (jenis_soal === 1) {
-                // Essay: Use text_jawaban
-                jawabanObj.jawaban = text_jawaban;
+            } else {
+                // Default object untuk non-matching questions
+                const jawabanObj = {
+                    nama_siswa,
+                    nisn,
+                    kelas,
+                    idmapel,
+                    nomor_soal,
+                    jenis_soal,
+                    text_soal,
+                    skor
+                };
+        
+                if (jenis_soal === 0) {
+                    const getSkor = await soalRepository.getSkor(idmapel, nomor_soal, kelas, 1);
+                    jawabanObj.skor = getSkor.idx_pilihan === idx_pilihan ? getSkor.skor : 0;
+                    jawabanObj.jawaban = idx_pilihan;
+                } else if (jenis_soal === 1) {
+                    jawabanObj.jawaban = text_jawaban;
+                } else if (jenis_soal === 3) {
+                    jawabanObj.jawaban = benarsalah;
+                }
+        
+                jawabanDataSiswaList.push(jawabanObj);
             }
-
-            // Push each jawabanObj into the jawabanDataSiswa array
-            jawabanDataSiswaList.push(jawabanObj);
-
-            // update status soal into 1 after success insert jawab
+        
+            // Update status soal setelah berhasil disimpan
             await soalRepository.updateStatusSoal(kelas, nisn);
         }
+        
         await soalRepository.insertJawabanSiswaBulk(jawabanDataSiswaList);
 
         
@@ -356,6 +509,106 @@ async function insertAnalisisJawabanSiswa(req) {
     }
 }
 
+ async function inserSoalMencocokan(req) {
+    try {
+        const {tahun_ajaran, nama_mapel, id_mapel, kelas, jenis_soal, available_on, skor, mencocokan } = req.body;
+        const mapelInTable = await mapelRepository.getDataMapelForOne(id_mapel);
+        let soalInput;
+
+        if (!mapelInTable) {
+            // insert parent table (mapel)
+            const dataMapel = kelas.map(kelassAssign =>({
+                idmapel: id_mapel,
+                nama_mapel: nama_mapel,
+                kelas: kelassAssign.kelas_assign,
+                created_date: new Date,
+            }))
+            await mapelRepository.insertMapelBulkKelas(dataMapel);
+        } else {
+            console.log('starting input soal mencocokan kelas : {}', kelas);
+            if (jenis_soal === 2) {
+                for (const kelassAssign of kelas){
+                    
+                    const listPernyataan = mencocokan.pernyataan
+                    .map(payload => ({
+                        kode_mapel: id_mapel,
+                        nomor_soal: payload.nomor_soal,
+                        jenis_soal: jenis_soal,
+                        text_soal: payload.text_soal,
+                        id_jawaban_benar: payload.id_jawaban_benar,
+                        created_at: new Date(),
+                        kelas: kelassAssign.kelas_assign
+                    }));
+
+                    if (listPernyataan.length > 0) {
+                        console.log('insert into pernyataan');
+                        await soalRepository.insertMatchingQuestion(listPernyataan);
+                        console.log('finish insert pernyataan');
+                    }
+
+                    const listJawabanMencocokan = mencocokan.jawaban
+                    .map(payload => ({
+                        nomor: payload.nomor,
+                        jenis_soal: jenis_soal,
+                        jawaban: payload.jawaban,
+                        skor: 0,
+                        created_at: new Date(),
+                        kelas: kelassAssign.kelas_assign,
+                        id_jawaban_benar: payload.id_jawaban_benar
+                    }))
+
+                    if (listJawabanMencocokan.length > 0) {
+                        console.log('insert into jawaban mencocokan', listJawabanMencocokan);
+                        await soalRepository.insertIntomatchingAnswerBulk(listJawabanMencocokan);
+                    }
+
+                    //insert into table soal
+                    if (mencocokan.pernyataan.length > 0) {
+                        for (const dataPernyataanMencocokan of mencocokan.pernyataan){
+                            const existingSoal = await soalRepository.getSoalByKodeAndNomor(id_mapel, dataPernyataanMencocokan.nomor_soal, kelassAssign.kelas_assign);
+                            console.log('existing soal', existingSoal);
+                            
+                            if (existingSoal) {
+                                console.log('existing')
+                                // if soal exist update the soal
+                                soalInput = await soalRepository.updateTextSoal(dataPernyataanMencocokan.text_soal, id_mapel, dataPernyataanMencocokan.nomor_soal, kelassAssign.kelas_assign, 0);
+                            } else {
+                                // insert into child 1 (soal)
+                                console.log('baru')
+                                soalInput = await soalRepository.insertIntoSoal(dataPernyataanMencocokan.nomor_soal, id_mapel, kelassAssign.kelas_assign, dataPernyataanMencocokan.text_soal, jenis_soal, available_on, 0);
+                            }
+            
+                        }
+                    }
+                    const assignStatus = await mapelRepository.getMapelAssignForClass(id_mapel, kelassAssign.kelas_assign);
+                    //asiggn soal into kelas
+                    if (!assignStatus) {
+                        //initiate data from data_induk first
+                        const nisnSiswa = await mapelRepository.getDataInduk(kelassAssign.kelas_assign, tahun_ajaran);
+                        const nisnBulk = nisnSiswa.map(nisns => ({
+                            kd_mapel: id_mapel,
+                            kelas: kelassAssign.kelas_assign,
+                            status_available: 1,
+                            nisn: nisns.nisn
+                        }))
+                        console.log('nisn bulk : ', nisnBulk);
+                        await mapelRepository.insertAssignSoalBulk(nisnBulk);
+                        // await mapelRepository.insertAssignSoal(kode_soal, id_mapel, kelas, 1);
+                    }
+                }
+                
+            }
+
+            return soalInput;
+
+        }
+        
+    } catch (error) {
+        console.error('Error when inserting soal mencocokan', error);
+        throw error;
+    }
+ }
+
 
 module.exports = {
     getSoal,
@@ -370,6 +623,7 @@ module.exports = {
     updateSkorJawabanSiswa,
     sumSkorJawabanSiswa,
     analisisJawabanSiswa,
-    insertAnalisisJawabanSiswa
+    insertAnalisisJawabanSiswa,
+    inserSoalMencocokan
 }
 

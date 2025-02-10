@@ -16,6 +16,7 @@ const inputMapel = {
 
 const inputSoal = {
     body: Joi.object().keys({
+        tahun_ajaran: Joi.string().required(),
         nama_mapel: Joi.string().required(),
         id_mapel: Joi.number().required(),
         kelas: Joi.array().items(
@@ -25,7 +26,7 @@ const inputSoal = {
         ),
         // kode_soal: Joi.number().required(),
         nomor_soal: Joi.number().required(),
-        jenis_soal: Joi.number().valid(0, 1).required(), // 0 untuk pilihan ganda, 1 untuk essay
+        jenis_soal: Joi.number().valid(0, 1, 2, 3).required(), // 0 untuk pilihan ganda, 1 untuk essay
         text_soal: Joi.string().required(),
         available_on: Joi.date(),
         skor: Joi.number(),
@@ -40,7 +41,17 @@ const inputSoal = {
             ),
             essay: Joi.object().keys({
                 jawaban: Joi.string().allow(null, '').optional() // Jawaban essay bisa null atau string
-            }).optional()
+            }).optional(),
+            mencocokan: Joi.array().items(
+                Joi.object().keys({
+                    jawaban: Joi.string(),
+                    skor: Joi.number(),
+                    no: Joi.number()
+                })
+            ),
+            benarsalah: Joi.object().keys({
+                jawaban: Joi.string().valid("benar", "salah").optional() // Jawaban essay bisa null atau string
+            }).optional(),
         }).required()
     })
 }
@@ -59,9 +70,28 @@ const inputJawabanSiswa = {
                 jawaban: Joi.object()
                     .keys({
                         idx_pilihan: Joi.string().optional().when('..jenis_soal', { is: 0, then: Joi.required() }),
-                        text_jawaban: Joi.string().optional().when('..jenis_soal', { is: 1, then: Joi.required() })
+                        text_jawaban: Joi.string().optional().when('..jenis_soal', { is: 1, then: Joi.required() }),
+                        mencocokan: Joi.object().keys({
+                            pernyataan: Joi.array().items(
+                                Joi.object().keys({
+                                    // idx: Joi.number().required(),
+                                    nomor_soal: Joi.number().required(),  // "a", "b", "c", dll.
+                                    text_soal: Joi.string().required(),      // Text dari jawaban pilihan
+                                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                                })
+                            ),
+                            jawaban: Joi.array().items(
+                                Joi.object().keys({
+                                    // idx: Joi.number().required(),
+                                    nomor: Joi.number().required(),  // "a", "b", "c", dll.
+                                    jawaban: Joi.string().required(),      // Text dari jawaban pilihan
+                                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                                })
+                            ),
+                        }),
+                        benarsalah: Joi.string().optional().when('..jenis_soal', { is: 3, then: Joi.required() })
                     })
-                    .or('idx_pilihan', 'text_jawaban') // Require at least one of the fields in jawaban
+                    .or('idx_pilihan', 'text_jawaban', 'mencocokan', 'benarsalah') // Require at least one of the fields in jawaban
                     .required(),// Ensure jawaban is required as well
                 skor: Joi.number(),
             }).required()
@@ -112,6 +142,40 @@ const deleteMapel = {
     })
 }
 
+const inputSoalMencocokan = {
+    body: Joi.object().keys({
+        tahun_ajaran: Joi.string().required(),
+        nama_mapel: Joi.string().required(),
+        id_mapel: Joi.number().required(),
+        kelas: Joi.array().items(
+            Joi.object().keys({
+                kelas_assign: Joi.string().required(),
+            })
+        ),
+        jenis_soal: Joi.number().valid(0, 1, 2, 3).required(), // 0 untuk pilihan ganda, 1 untuk essay
+        available_on: Joi.date(),
+        skor: Joi.number(),
+        mencocokan: Joi.object().keys({
+            pernyataan: Joi.array().items(
+                Joi.object().keys({
+                    // idx: Joi.number().required(),
+                    nomor_soal: Joi.number().required(),  // "a", "b", "c", dll.
+                    text_soal: Joi.string().required(),      // Text dari jawaban pilihan
+                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                })
+            ),
+            jawaban: Joi.array().items(
+                Joi.object().keys({
+                    // idx: Joi.number().required(),
+                    nomor: Joi.number().required(),  // "a", "b", "c", dll.
+                    jawaban: Joi.string().required(),      // Text dari jawaban pilihan
+                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                })
+            ),
+        }).required()
+    })
+}
+
 module.exports = {
     inputMapel,
     inputSoal,
@@ -119,5 +183,6 @@ module.exports = {
     deleteSoal,
     updateSkorJawabanSiswa,
     analisisJawabanSiswa,
-    deleteMapel
+    deleteMapel,
+    inputSoalMencocokan
 }

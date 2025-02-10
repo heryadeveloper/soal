@@ -39,9 +39,19 @@ const deleteMapel = catchAcync(async(req, res) => {
     }
 })
 
+const getMapelForGuruUseKodeGuru = catchAcync(async(req, res) => {
+    const getMapelForGuru = await mapelService.getMapelForGuruUseKodeGuru(req);
+    if (getMapelForGuru) {
+        res.send(responseInfo('Success Get Data Mapel', getMapelForGuru));
+    } else {
+        res.send(expectationFailed('Something Error', null));
+    }
+})
+
 module.exports = {
     inputMapel,
     getDataMapel,
     getMapelForGuru,
-    deleteMapel
+    deleteMapel,
+    getMapelForGuruUseKodeGuru
 }

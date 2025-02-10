@@ -27,9 +27,9 @@ async function getDataMapel(){
 }
 
 async function getMapelForGuru(req) {
-    const {kode_guru} = req.query;
+    const {kode_guru, kelas} = req.query;
     try {
-        const responseData = await mapelRepository.getMapelForGuru(kode_guru);
+        const responseData = await mapelRepository.getMapelForGuru(kode_guru, kelas);
         return responseData;
     } catch (error) {
         console.error('Error in service when get mapel');
@@ -52,9 +52,21 @@ async function deleteMapel(req) {
     }
 }
 
+async function getMapelForGuruUseKodeGuru(req) {
+    const {kode_guru} = req.query;
+    try {
+        const responseData = await mapelRepository.getMapelForGuruUseKodeGuru(kode_guru);
+        return responseData;
+    } catch (error) {
+        console.error('Error in service when get mapel');
+        throw error;
+    }
+}
+
 module.exports = {
     insertDataMapel,
     getDataMapel,
     getMapelForGuru,
-    deleteMapel
+    deleteMapel,
+    getMapelForGuruUseKodeGuru
 }

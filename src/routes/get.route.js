@@ -23,6 +23,8 @@ const routes = [
     { path: '/analisisJawaban', method: 'get', handler: soalController.analisisJawaban},
     { path: '/insertAnalisisJawabanSiswa', method: 'post', validation: mapelValidation.analisisJawabanSiswa, handler: soalController.insertAnalisisJawabanSiswa},
     { path: '/deleteMapel', method: 'post', validation: mapelValidation.deleteMapel, handler: mapelController.deleteMapel},
+    { path: '/getMapelForGuruUseCode', method: 'get', handler: mapelController.getMapelForGuruUseKodeGuru},
+    { path: '/insertSoalMencocokan', method: 'post', handler: soalController.insertSoalMencocokan, validation: mapelValidation.inputSoalMencocokan},
 ];
 
 routes.forEach(route => {

@@ -1,3 +1,4 @@
+const { type } = require('@hapi/joi/lib/extend');
 const db = require('../db/models');
 const {Op, where} = require('sequelize');
 const { QueryTypes } = require('sequelize');
@@ -141,6 +142,24 @@ async function getEssay(kode_soal, kelas){
     }
 }
 
+
+async function getBenarsalah(kode_soal,nomor_soal, kelas){
+    try {
+        const benarsalah = await db.benarsalah.findOne({
+            where:{
+                kode_mapel: kode_soal,
+                nomor_soal,
+                kelas
+            },
+            raw: true,
+        });
+        return benarsalah;
+    } catch (error) {
+        console.error('Error when get benarsalah', error);
+        throw error;
+    }
+}
+
 async function insertIntoPilihanBulk(jawabanPilihanGanda){
     try {
         await db.pilihan_ganda.bulkCreate(jawabanPilihanGanda);
@@ -181,6 +200,25 @@ async function getAvailableTest(kelas, nisn) {
     }
 }
 
+
+async function getMatchingAnswer(kode_mapel, jenis_soal, kelas) {
+    try {
+        const result = await db.sequelize.query(`
+            select * from comparation c where c.kode_mapel = :kode_mapel and c.jenis_soal = :jenis_soal and c.kelas = :kelas`,
+        {
+            replacements: {
+                kode_mapel: kode_mapel,
+                jenis_soal: jenis_soal,
+                kelas : kelas
+            },
+            type: QueryTypes.SELECT
+        });
+        return result;
+    } catch (error) {
+        console.error('Error when get matching answer');
+        throw error;
+    }
+}
 async function updateStatusSoal(kelas , nisn){
     try {
         await db.assign_soal.update(
@@ -201,14 +239,17 @@ async function updateStatusSoal(kelas , nisn){
 async function getSoalByKodeAndNomor(id_mapel, nomor_soal, kelas){
     try {
         const existingSoal = await db.soal.findOne({
-            where: {nomor_soal, kode_mapel: id_mapel, kelas
+            where: {
+                nomor_soal, 
+                kode_mapel: id_mapel, 
+                kelas
             },
             raw: true,
         });
         return existingSoal;
     } catch (error) {
         console.error('Error when get data');
-        throw new error.message;
+        throw error;
     }
 }
 
@@ -359,7 +400,7 @@ async function getDataJawabanSiswa(kelas, idmapel, nisn, kode_guru){
         const result = await db.sequelize.query(`
             SELECT a.id, a.nama_siswa, a.kelas, a.nisn, c.nama_mapel, a.idmapel, a.nomor_soal, a.jenis_soal, a.text_soal, a.jawaban, a.skor
             FROM data_jawaban_siswa a
-            JOIN mapel c ON c.idmapel = a.idmapel
+            JOIN mapel c ON c.idmapel = a.idmapel and c.kelas = a.kelas
             JOIN account_guru_karyawan b ON b.kode_guru = c.kode_guru
             WHERE c.idmapel = :idmapel
             AND a.kelas = :kelas
@@ -561,6 +602,179 @@ async function getKategoriJawaban(kelas, idmapel) {
     }
 }
 
+async function insertMatchingQuestion(mencocokan){
+    console.log("mencocokan");
+    try {
+
+        // Buat placeholder dinamis berdasarkan jumlah data
+        const placeholders = mencocokan.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ');
+
+        const query = `
+            INSERT INTO matching_question (kode_mapel, nomor_soal, jenis_soal, text_soal, id_jawaban_benar, created_at, kelas)
+            VALUES ${placeholders}
+            ON DUPLICATE KEY UPDATE
+                nomor_soal = VALUES(nomor_soal),
+                text_soal = VALUES(text_soal),
+                id_jawaban_benar = VALUES(id_jawaban_benar),
+                kelas = VALUES(kelas);
+        `;
+
+
+       // Ratakan data untuk menggantikan placeholder
+        const values = mencocokan.flatMap(item => [
+            item.kode_mapel,
+            item.nomor_soal,
+            item.jenis_soal,
+            item.text_soal,
+            item.id_jawaban_benar,
+            item.created_at,
+            item.kelas
+        ]);
+
+        console.log(values);
+
+        // Eksekusi query
+        await db.query(query, { replacements: values, type: QueryTypes.INSERT });
+
+        console.log('Data berhasil di-insert atau di-update');
+
+    } catch (error) {
+        console.error('Error when inserting data', error);
+        throw error;
+    }
+}
+
+
+async function insertIntomatchingAnswerBulk(mencocokan){
+    try {
+
+        // Buat placeholder dinamis berdasarkan jumlah data
+        const placeholders = mencocokan.map(() => '(?, ?, ?, ?, ?, ?, ?)').join(', ');
+
+        const query = `
+            INSERT INTO matching_answer (nomor, jenis_soal, jawaban, skor, created_at, kelas, id_jawaban_benar)
+            VALUES ${placeholders}
+            ON DUPLICATE KEY UPDATE
+                nomor = VALUES(nomor),
+                jawaban = VALUES(jawaban),
+                skor = VALUES(skor),
+                id_jawaban_benar = VALUES(id_jawaban_benar),
+                kelas = VALUES(kelas);
+        `;
+
+
+       // Ratakan data untuk menggantikan placeholder
+        const values = mencocokan.flatMap(item => [
+            item.nomor,
+            item.jenis_soal,
+            item.jawaban,
+            item.skor,
+            item.created_at,
+            item.kelas,
+            item.id_jawaban_benar
+        ]);
+
+        // Eksekusi query
+        await db.query(query, { replacements: values, type: QueryTypes.INSERT });
+
+        console.log('Data berhasil di-insert atau di-update');
+
+    } catch (error) {
+        console.error('Error when inserting data', error);
+        throw error;
+    }
+}
+
+
+
+async function insertJawabanBenarSalah(kode_mapel, nomor_soal, jenis_soal, textsoal, jawaban, kelas, skor) {
+    try {
+        await db.benarsalah.create({
+            kode_mapel,
+            nomor_soal,
+            jenis_soal,
+            textsoal,
+            jawaban,
+            created_at: new Date(),
+            kelas,
+            skor
+        });
+    } catch (error) {
+        console.error('Error when inserting data ');
+        throw error;
+    }
+}
+
+async function getJawabanBenarSalah(kode_mapel, nomor_soal, jenis_soal, kelas){
+    try {
+        const jawabanessay = await db.essay.findOne({
+            where:{
+                kode_mapel,
+                nomor_soal,
+                jenis_soal,
+                kelas
+            },
+            raw: true,
+        });
+        console.log('jawaban essay repo : ', jawabanessay);
+        return jawabanessay;
+    } catch (error) {
+        console.error('Error when get jawaban essay');
+        throw new error.message;
+    }
+}
+
+
+async function updateJawabanBenarSalah(jawaban, kode_mapel, jenis_soal, nomor_soal, kelas){
+    try {
+        await db.benarsalah.update(
+            {jawaban},
+            {
+                where:{
+                    kode_mapel,
+                    jenis_soal,
+                    nomor_soal,
+                    kelas
+                }
+            }
+        )
+    } catch (error) {
+        console.error('Error update jawaban');
+        throw new error.message;
+    }
+}
+
+async function getMatchingQuestion(kode_mapel, kelas) {
+    try {
+        const matchingQuestion = await db.matching_question.findAll({
+            where:{
+                kode_mapel,
+                kelas
+            },
+            raw: true,
+        });
+        return matchingQuestion;
+    } catch (error) {
+        console.error('Error when get matching question', error);
+        throw error;
+    }
+    
+}
+
+async function getMatchingAnswered(kelas) {
+    try {
+        const matchingAnswer = await db.matching_answer.findAll({
+            where:{
+                kelas,
+            },
+            raw: true,
+        });
+        return matchingAnswer;
+    } catch (error) {
+        console.error('Error when get matching answered');
+        throw error;
+    }
+}
 
 module.exports = {
     insertIntoSoal,
@@ -590,5 +804,14 @@ module.exports = {
     getAnalisisJawabanSiswa,
     kategoriSoal,
     insertAnalisisJawabanSiswa,
-    getKategoriJawaban
+    getKategoriJawaban,
+    getMatchingAnswer,
+    getBenarsalah,
+    insertIntomatchingAnswerBulk,
+    insertMatchingQuestion,
+    insertJawabanBenarSalah,
+    getJawabanBenarSalah,
+    updateJawabanBenarSalah,
+    getMatchingQuestion,
+    getMatchingAnswered
 }

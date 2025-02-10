@@ -45,14 +45,17 @@ async function getDataMapelForOne(idmapel){
     }
 }
 
-async function getMapelForGuru(kode_guru){
+async function getMapelForGuru(kode_guru, kelas){
     try {
-        const responseData = await db.mapel.findAll({
-            where :{
-                kode_guru
-            },
-            raw: true
-        })
+        const result =`
+            select distinct m.nama_mapel, m.idmapel , m.guru_pengampu , m.kelas   
+            from smknutulis.mapel m 
+            where m.kode_guru = :kode_guru
+            and m.kelas = :kelas`;
+        const responseData = await db.sequelize.query(result, {
+            replacements: {kode_guru, kelas},
+            type: db.Sequelize.QueryTypes.SELECT,
+        });
         return responseData;
     } catch (error) {
         console.error('Error get mapel');
@@ -151,6 +154,24 @@ async function deleteMapel(nama_mapel, kelas, guru_pengampu){
     }
 }
 
+async function getMapelForGuruUseKodeGuru(kode_guru){
+    try {
+        const result =`
+            select distinct m.nama_mapel, m.idmapel , m.guru_pengampu
+            from smknutulis.mapel m 
+            where m.kode_guru = :kode_guru`;
+        const responseData = await db.sequelize.query(result, {
+            replacements: {kode_guru},
+            type: db.Sequelize.QueryTypes.SELECT,
+        });
+        return responseData;
+    } catch (error) {
+        console.error('Error get mapel');
+        throw error;
+    }
+}
+
+
 module.exports = {
     insertDataMapel,
     getDataMapel,
@@ -161,5 +182,6 @@ module.exports = {
     insertAssignSoalBulk,
     getDataInduk,
     insertMapelBulkKelas,
-    deleteMapel
+    deleteMapel,
+    getMapelForGuruUseKodeGuru
 }

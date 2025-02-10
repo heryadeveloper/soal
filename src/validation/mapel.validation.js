@@ -50,7 +50,7 @@ const inputSoal = {
                 })
             ),
             benarsalah: Joi.object().keys({
-                jawaban: Joi.string().valid("benar", "salah").optional() // Jawaban essay bisa null atau string
+                jawaban: Joi.string().allow(null, '').optional() // Jawaban essay bisa null atau string
             }).optional(),
         }).required()
     })

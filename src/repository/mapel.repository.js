@@ -49,7 +49,7 @@ async function getMapelForGuru(kode_guru, kelas){
     try {
         const result =`
             select distinct m.nama_mapel, m.idmapel , m.guru_pengampu , m.kelas   
-            from smknutulis.mapel m 
+            from mapel m 
             where m.kode_guru = :kode_guru
             and m.kelas = :kelas`;
         const responseData = await db.sequelize.query(result, {

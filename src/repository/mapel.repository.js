@@ -158,7 +158,7 @@ async function getMapelForGuruUseKodeGuru(kode_guru){
     try {
         const result =`
             select distinct m.nama_mapel, m.idmapel , m.guru_pengampu
-            from smknutulis.mapel m 
+            from mapel m 
             where m.kode_guru = :kode_guru`;
         const responseData = await db.sequelize.query(result, {
             replacements: {kode_guru},

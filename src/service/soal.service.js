@@ -511,7 +511,7 @@ async function insertAnalisisJawabanSiswa(req) {
 
  async function inserSoalMencocokan(req) {
     try {
-        const {tahun_ajaran, nama_mapel, id_mapel, kelas, jenis_soal, available_on, skor, mencocokan } = req.body;
+        const {tahun_ajaran, nama_mapel, id_mapel, kelas, jenis_soal, available_on,nomor_soal, skor, mencocokan } = req.body;
         const mapelInTable = await mapelRepository.getDataMapelForOne(id_mapel);
         let soalInput;
 

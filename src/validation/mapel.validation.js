@@ -147,6 +147,7 @@ const inputSoalMencocokan = {
         tahun_ajaran: Joi.string().required(),
         nama_mapel: Joi.string().required(),
         id_mapel: Joi.number().required(),
+        nomor_soal: Joi.number(),
         kelas: Joi.array().items(
             Joi.object().keys({
                 kelas_assign: Joi.string().required(),

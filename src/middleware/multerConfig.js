@@ -4,7 +4,8 @@ const path = require('path');
 const fs = require('fs');
 
 // Use the path module to construct the uploads directory path
-const uploadDirectory = path.join(__dirname, 'uploads');
+const uploadPath = process.env.UPLOAD_PATH || 'uploads'; 
+const uploadDirectory = path.join(__dirname, uploadPath);
 
 if (!fs.existsSync(uploadDirectory)) {
     fs.mkdirSync(uploadDirectory);

@@ -1,6 +1,6 @@
 const express = require('express');
 const validate = require('../middleware/validate');
-const { mapelController, soalController } = require('../controller');
+const { mapelController, soalController, uploadController } = require('../controller');
 const { mapelValidation } = require('../validation');
 
 const router = express.Router();

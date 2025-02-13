@@ -171,6 +171,37 @@ async function getMapelForGuruUseKodeGuru(kode_guru){
     }
 }
 
+async function uploadGamber(nama, nama_file, path){
+    try {
+        await db.upload_gambar.create({
+            nama,
+            nama_file,
+            path,
+            created_date: new Date
+        });
+    } catch (error) {
+        console.error('Error when upload data');
+        throw error;
+    }
+}
+
+async function getImage(nama_file) {
+    try {
+        const imageFile = await db.upload_gambar.findOne({
+            where :{
+                nama: nama_file
+            },
+            raw: true,
+        });
+        if (!imageFile) {
+            throw new Error('Image not found');
+        }
+        return imageFile;
+    } catch (error) {
+        
+    }
+}
+
 
 module.exports = {
     insertDataMapel,
@@ -183,5 +214,7 @@ module.exports = {
     getDataInduk,
     insertMapelBulkKelas,
     deleteMapel,
-    getMapelForGuruUseKodeGuru
+    getMapelForGuruUseKodeGuru,
+    uploadGamber,
+    getImage
 }

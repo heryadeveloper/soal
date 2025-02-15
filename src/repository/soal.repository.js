@@ -787,7 +787,7 @@ async function getPreviewSoal(kelas) {
                             when s.jenis_soal = 3 then "Benar Salah"
                         end as jenis,
                         s.text_soal , s.skor  from
-                        smknutulis.soal s join smknutulis.mapel m
+                        soal s join mapel m
                         on s.kode_mapel  = m.idmapel
                         and s.kelas = m.kelas
                         where s.kelas =:kelas;

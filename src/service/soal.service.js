@@ -571,11 +571,11 @@ async function insertAnalisisJawabanSiswa(req) {
                             if (existingSoal) {
                                 console.log('existing')
                                 // if soal exist update the soal
-                                soalInput = await soalRepository.updateTextSoal(dataPernyataanMencocokan.text_soal, id_mapel, dataPernyataanMencocokan.nomor_soal, kelassAssign.kelas_assign, 0);
+                                soalInput = await soalRepository.updateTextSoal(dataPernyataanMencocokan.text_soal, id_mapel, dataPernyataanMencocokan.nomor_soal, kelassAssign.kelas_assign, dataPernyataanMencocokan.skor);
                             } else {
                                 // insert into child 1 (soal)
                                 console.log('baru')
-                                soalInput = await soalRepository.insertIntoSoal(dataPernyataanMencocokan.nomor_soal, id_mapel, kelassAssign.kelas_assign, dataPernyataanMencocokan.text_soal, jenis_soal, available_on, 0);
+                                soalInput = await soalRepository.insertIntoSoal(dataPernyataanMencocokan.nomor_soal, id_mapel, kelassAssign.kelas_assign, dataPernyataanMencocokan.text_soal, jenis_soal, available_on, dataPernyataanMencocokan.skor);
                             }
             
                         }
@@ -609,6 +609,16 @@ async function insertAnalisisJawabanSiswa(req) {
     }
  }
 
+ async function getPreviewSoal(req) {
+    try {
+        const {kelas} = req.query;
+        const data = await soalRepository.getPreviewSoal(kelas);
+        return data;
+    } catch (error) {
+        console.error('Error get soal preview');
+        throw error;
+    }
+ }
 
 module.exports = {
     getSoal,
@@ -624,6 +634,7 @@ module.exports = {
     sumSkorJawabanSiswa,
     analisisJawabanSiswa,
     insertAnalisisJawabanSiswa,
-    inserSoalMencocokan
+    inserSoalMencocokan,
+    getPreviewSoal
 }
 

@@ -183,7 +183,8 @@ async function getAvailableTest(kelas, nisn) {
         const result = await db.sequelize.query(`
             select as2.status_available, m.idmapel, m.nama_mapel, m.guru_pengampu from assign_soal as2 
             join mapel m on
-            m.idmapel = as2.kd_mapel 
+            m.idmapel = as2.kd_mapel
+            and m.kelas = as2.kelas  
             where as2.kelas = :kelas
             and as2.nisn = :nisn`,
             {
@@ -776,6 +777,33 @@ async function getMatchingAnswered(kelas) {
     }
 }
 
+async function getPreviewSoal(kelas) {
+    try {
+        const  query = `select s.nomor_soal , m.nama_mapel ,
+                        case
+                            when s.jenis_soal = 0 then "Pilihan Ganda"
+                            when s.jenis_soal = 1 then "Essay"
+                            when s.jenis_soal = 2 then "Menjodohkan"
+                            when s.jenis_soal = 3 then "Benar Salah"
+                        end as jenis,
+                        s.text_soal , s.skor  from
+                        smknutulis.soal s join smknutulis.mapel m
+                        on s.kode_mapel  = m.idmapel
+                        and s.kelas = m.kelas
+                        where s.kelas =:kelas;
+                        `;
+        const responseData = await db.sequelize.query(query, {
+            replacements: {kelas},
+            type: db.Sequelize.QueryTypes.SELECT,
+        });
+
+        return responseData;
+    } catch (error) {
+        console.error('Error get preview soal');
+        throw error;
+    }
+}
+
 module.exports = {
     insertIntoSoal,
     insertIntoPilihan,
@@ -813,5 +841,6 @@ module.exports = {
     getJawabanBenarSalah,
     updateJawabanBenarSalah,
     getMatchingQuestion,
-    getMatchingAnswered
+    getMatchingAnswered,
+    getPreviewSoal
 }

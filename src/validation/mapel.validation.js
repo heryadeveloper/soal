@@ -162,7 +162,8 @@ const inputSoalMencocokan = {
                     // idx: Joi.number().required(),
                     nomor_soal: Joi.number().required(),  // "a", "b", "c", dll.
                     text_soal: Joi.string().required(),      // Text dari jawaban pilihan
-                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                    id_jawaban_benar: Joi.number().required() ,
+                    skor: Joi.number(),         // Skor untuk jawaban yang benar
                 })
             ),
             jawaban: Joi.array().items(

@@ -779,6 +779,8 @@ async function getMatchingAnswered(kelas) {
 
 async function getPreviewSoal(kelas) {
     try {
+        const kelasArray = Array.isArray(kelas) ? kelas : kelas.split(",");
+
         const  query = `select s.nomor_soal , m.nama_mapel ,
                         case
                             when s.jenis_soal = 0 then "Pilihan Ganda"
@@ -790,10 +792,11 @@ async function getPreviewSoal(kelas) {
                         soal s join mapel m
                         on s.kode_mapel  = m.idmapel
                         and s.kelas = m.kelas
-                        where s.kelas =:kelas;
+                        where s.kelas in (:kelas)
+                        GROUP BY s.nomor_soal, m.nama_mapel, s.jenis_soal, s.text_soal, s.skor;
                         `;
         const responseData = await db.sequelize.query(query, {
-            replacements: {kelas},
+            replacements: {kelas: kelasArray},
             type: db.Sequelize.QueryTypes.SELECT,
         });
 

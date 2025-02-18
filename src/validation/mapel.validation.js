@@ -88,7 +88,7 @@ const inputJawabanSiswa = {
                                     id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
                                 })
                             ),
-                        }),
+                        }).optional().when('..jenis_soal', { is: 2, then: Joi.required() }),
                         benarsalah: Joi.string().optional().when('..jenis_soal', { is: 3, then: Joi.required() })
                     })
                     .or('idx_pilihan', 'text_jawaban', 'mencocokan', 'benarsalah') // Require at least one of the fields in jawaban

@@ -793,7 +793,8 @@ async function getPreviewSoal(kelas) {
                         on s.kode_mapel  = m.idmapel
                         and s.kelas = m.kelas
                         where s.kelas in (:kelas)
-                        GROUP BY s.nomor_soal, m.nama_mapel, s.jenis_soal, s.text_soal, s.skor;
+                        GROUP BY s.nomor_soal, m.nama_mapel, s.jenis_soal, s.text_soal, s.skor
+                        order by s.nomor_soal asc;
                         `;
         const responseData = await db.sequelize.query(query, {
             replacements: {kelas: kelasArray},

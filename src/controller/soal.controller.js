@@ -146,6 +146,15 @@ const getSoalPreview = catchAsync(async(req, res) => {
         res.send(expectationFailed('Something Error', null));
     }
 })
+
+const getStatusPengerjaan = catchAsync(async(req, res) => {
+    const statusPengerjaan = await soalService.getStatusPengerjaan(req);
+    if (statusPengerjaan) {
+        res.send(responseInfo('Success get preview soal', statusPengerjaan));
+    } else {
+        res.send(expectationFailed('Something Error', null));
+    }
+})
 module.exports = {
     getSoal,
     getSoalEssay,
@@ -161,5 +170,6 @@ module.exports = {
     analisisJawaban,
     insertAnalisisJawabanSiswa,
     insertSoalMencocokan,
-    getSoalPreview
+    getSoalPreview,
+    getStatusPengerjaan
 }

@@ -262,64 +262,6 @@ async function inputJawabanSiswa(req){
     try {
         const { payload } = req.body;
         const jawabanDataSiswaList = [];
-        // for (let jawaban of payload){
-        //     const {
-        //         nama_siswa,
-        //         nisn,
-        //         kelas,
-        //         idmapel,
-        //         nomor_soal,
-        //         jenis_soal,
-        //         text_soal,
-        //         jawaban: { idx_pilihan, text_jawaban, mencocokan, benarsalah },
-        //         skor
-        //     } = jawaban;
-
-        //     const jawabanObj = {
-        //         nama_siswa,
-        //         nisn,
-        //         kelas,
-        //         idmapel,
-        //         nomor_soal,
-        //         jenis_soal,
-        //         text_soal,
-        //         skor,
-        //     };
-
-        //      // Handle multiple-choice or essay based on jenis_soal
-        //     if (jenis_soal === 0) {
-        //         //jika jawaban pilihan ganda mesti cek terlebihh dahulu untuk point yang di dapatkan jika berhasil menjawab dengn benar
-        //         const getSkor = await soalRepository.getSkor(idmapel, nomor_soal, kelas, 1);
-        //         console.log('idx pilihan: ', idx_pilihan);
-        //         if (getSkor.idx_pilihan === idx_pilihan) {
-        //             jawabanObj.skor = getSkor.skor;
-        //         }else{
-        //             jawabanObj.skor = 0;
-        //         }
-
-        //         // Multiple-choice: Use idx_pilihan
-        //         jawabanObj.jawaban = idx_pilihan;
-        //     } else if (jenis_soal === 1) {
-        //         // Essay: Use text_jawaban
-        //         jawabanObj.jawaban = text_jawaban;
-        //     }
-        //     else if (jenis_soal === 2) {
-        //         for (const data of mencocokan){
-        //             jawabanObj.text_soal = data.pernyataan.text_soal;
-        //             jawabanObj.jawaban = data.jawaban.jawaban;
-        //         }
-        //     }
-        //     else if (jenis_soal === 3) {
-        //         // Essay: Use text_jawaban
-        //         jawabanObj.jawaban = benarsalah;
-        //     }
-
-        //     // Push each jawabanObj into the jawabanDataSiswa array
-        //     jawabanDataSiswaList.push(jawabanObj);
-
-        //     // update status soal into 1 after success insert jawab
-        //     await soalRepository.updateStatusSoal(kelas, nisn);
-        // }
         for (let jawaban of payload) {
             const {
                 nama_siswa,
@@ -620,6 +562,17 @@ async function insertAnalisisJawabanSiswa(req) {
     }
  }
 
+async function getStatusPengerjaan(req) {
+    try {
+        const {kelas, tahun_ajaran, idmapel} = req.query;
+        const data = await soalRepository.getStatusPengerjaan(kelas, tahun_ajaran, idmapel);
+        return data;
+    } catch (error) {
+        console.error('Error get data status');
+        throw error;
+    }
+}
+
 module.exports = {
     getSoal,
     getSoalEssay,
@@ -635,6 +588,7 @@ module.exports = {
     analisisJawabanSiswa,
     insertAnalisisJawabanSiswa,
     inserSoalMencocokan,
-    getPreviewSoal
+    getPreviewSoal,
+    getStatusPengerjaan
 }
 

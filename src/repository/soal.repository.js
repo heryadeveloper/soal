@@ -808,6 +808,37 @@ async function getPreviewSoal(kelas) {
     }
 }
 
+async function getStatusPengerjaan(kelas, tahun_ajaran, idmapel) {
+    try {
+        const query =`select
+                    a.id,
+                    b.nama,
+                    a.kelas ,
+                    case
+                        when a.status_available = 0 then 'Sudah'
+                        when a.status_available = 1 then 'Belum'
+                    end as status
+                    from smknutulis.assign_soal a
+                    join smknutulis.data_induk b
+                    on a.nisn = b.nisn
+                    join smknutulis.mapel c
+                    on a.kd_mapel = c.idmapel
+                    and a.kelas = c.kelas
+                    where a.kelas = :kelas
+                    and b.tahun_ajaran = :tahun_ajaran
+                    and c.idmapel =:idmapel`;
+        const responseData = await db.sequelize.query(query, {
+            replacements: {kelas, tahun_ajaran, idmapel},
+            type: db.Sequelize.QueryTypes.SELECT,
+        });
+
+        return responseData;
+    } catch (error) {
+        console.error('Error get data status', error);
+        throw error;
+    }
+}
+
 module.exports = {
     insertIntoSoal,
     insertIntoPilihan,
@@ -846,5 +877,6 @@ module.exports = {
     updateJawabanBenarSalah,
     getMatchingQuestion,
     getMatchingAnswered,
-    getPreviewSoal
+    getPreviewSoal,
+    getStatusPengerjaan
 }

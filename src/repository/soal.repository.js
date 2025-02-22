@@ -818,8 +818,8 @@ async function getStatusPengerjaan(kelas, tahun_ajaran, idmapel) {
                         when a.status_available = 0 then 'Sudah'
                         when a.status_available = 1 then 'Belum'
                     end as status
-                    from smknutulis.assign_soal a
-                    join smknutulis.data_induk b
+                    from assign_soal a
+                    join data_induk b
                     on a.nisn = b.nisn
                     join smknutulis.mapel c
                     on a.kd_mapel = c.idmapel

@@ -821,7 +821,7 @@ async function getStatusPengerjaan(kelas, tahun_ajaran, idmapel) {
                     from assign_soal a
                     join data_induk b
                     on a.nisn = b.nisn
-                    join smknutulis.mapel c
+                    join mapel c
                     on a.kd_mapel = c.idmapel
                     and a.kelas = c.kelas
                     where a.kelas = :kelas

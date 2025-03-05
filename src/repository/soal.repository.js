@@ -817,7 +817,7 @@ async function getMatchingAnswered(kelas) {
     }
 }
 
-async function getPreviewSoal(kelas) {
+async function getPreviewSoal(kelas, idmapel) {
     try {
         const kelasArray = Array.isArray(kelas) ? kelas : kelas.split(",");
 
@@ -833,11 +833,15 @@ async function getPreviewSoal(kelas) {
                         on s.kode_mapel  = m.idmapel
                         and s.kelas = m.kelas
                         where s.kelas in (:kelas)
+                        and m.idmapel = :idmapel
                         GROUP BY s.nomor_soal, m.nama_mapel, s.jenis_soal, s.text_soal, s.skor
                         order by s.nomor_soal asc;
                         `;
         const responseData = await db.sequelize.query(query, {
-            replacements: {kelas: kelasArray},
+            replacements: {
+                kelas: kelasArray,
+                idmapel
+            },
             type: db.Sequelize.QueryTypes.SELECT,
         });
 

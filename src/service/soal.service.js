@@ -582,8 +582,8 @@ async function insertAnalisisJawabanSiswa(req) {
 
  async function getPreviewSoal(req) {
     try {
-        const {kelas} = req.query;
-        const data = await soalRepository.getPreviewSoal(kelas);
+        const {kelas, idmapel} = req.query;
+        const data = await soalRepository.getPreviewSoal(kelas, idmapel);
         return data;
     } catch (error) {
         console.error('Error get soal preview');

@@ -42,27 +42,52 @@ const uploadFile = async (req, res) => {
         const fileName = req.file.filename;
         const filePath = `../../upload/${kelas}/${mapel}/${tanggal}/${fileName}`;
 
+        // fs.rename(oldPath, newPath, async (err) => {
+        //     if (err) {
+        //         console.error('❌ Gagal memindahkan file:', err);
+        //         return res.status(500).send({ error: 'Failed to move file' });
+        //     }
+
+        //     console.log('✅ File berhasil dipindahkan ke:', newPath);
+        //     res.send({ message: 'File uploaded successfully', file: newPath });
+        // });
+
+        // try {
+        //     const result = await mapelRepository.uploadGamber(nama, fileName, filePath, kelas, mapel);
+        //     console.log('result : ', result);
+        //     res.send(responseInfo('File upload successful', result));
+        // } catch (error) {
+        //     console.error('Error during file upload:', error);
+        //     // Hapus file yang sudah diupload jika terjadi error
+        //     if (fs.existsSync(filePath)) {
+        //         fs.unlinkSync(filePath);
+        //     }
+        //     res.status(417).send(errorNotFound('Something went wrong', error));
+        // }
         fs.rename(oldPath, newPath, async (err) => {
             if (err) {
                 console.error('❌ Gagal memindahkan file:', err);
                 return res.status(500).send({ error: 'Failed to move file' });
             }
-
+        
             console.log('✅ File berhasil dipindahkan ke:', newPath);
-            res.send({ message: 'File uploaded successfully', file: newPath });
-        });
-
-        try {
-            const result = await mapelRepository.uploadGamber(nama, fileName, filePath, kelas, mapel);
-            res.send(responseInfo('File upload successful', result));
-        } catch (error) {
-            console.error('Error during file upload:', error);
-            // Hapus file yang sudah diupload jika terjadi error
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
+        
+            try {
+                const result = await mapelRepository.uploadGamber(nama, fileName, filePath, kelas, mapel);
+                console.log('result : ', result);
+                res.send(responseInfo('File upload successful', result)); // ✅ Hanya satu res.send()
+            } catch (error) {
+                console.error('Error during file upload:', error);
+                
+                // Hapus file yang sudah diupload jika terjadi error
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+        
+                res.status(417).send(errorNotFound('Something went wrong', error));
             }
-            res.status(417).send(errorNotFound('Something went wrong', error));
-        }
+        });
+        
     });
 };
 

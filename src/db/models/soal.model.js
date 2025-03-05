@@ -46,7 +46,7 @@ module.exports = (sequelize, DataType) => {
             },
             path_image: {
                 type: DataType.STRING,
-                allowNull: false,
+                allowNull: true,
             },
         },{
             tableName:'soal'

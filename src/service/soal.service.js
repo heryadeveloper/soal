@@ -1,4 +1,5 @@
 const { soalRepository, mapelRepository } = require("../repository");
+const { getSkorMatchingAnswer } = require("../repository/soal.repository");
 
 async function getSoal(req){
     const {idmapel, kelas} = req.query;
@@ -72,6 +73,7 @@ async function getSoal(req){
                     kelas: soal.kelas,
                     text_soal: soal.text_soal,
                     skor: soal.skor,
+                    path_image: soal.path_image,
                     pilihan_ganda,
                     jawaban_essay,
                     menjodohkan,
@@ -308,12 +310,33 @@ async function inputJawabanSiswa(req){
         
                 if (jenis_soal === 0) {
                     const getSkor = await soalRepository.getSkor(idmapel, nomor_soal, kelas, 1);
+                    console.log('skor dan pilihan : ', getSkor.idx_pilihan, getSkor.skor);
                     jawabanObj.skor = getSkor.idx_pilihan === idx_pilihan ? getSkor.skor : 0;
                     jawabanObj.jawaban = idx_pilihan;
                 } else if (jenis_soal === 1) {
                     jawabanObj.jawaban = text_jawaban;
                 } else if (jenis_soal === 3) {
-                    jawabanObj.jawaban = benarsalah;
+                    let param = benarsalah === 'true' ? 'Benar' : benarsalah === 'false' ? 'Salah' : null;
+
+                    if (!param) {
+                        console.error("Nilai benarsalah tidak valid:", benarsalah);
+                        return; // Hentikan eksekusi jika nilai tidak valid
+                    }
+
+                    console.log('logging benar salah : ', param);
+                    try {
+                        const getSkorBenarSalah = await soalRepository.getSkorBenarSalah(nomor_soal, kelas, param);
+                
+                        const skor = getSkorBenarSalah && getSkorBenarSalah.skor ? getSkorBenarSalah.skor : 0;
+                
+                        console.log('rs : ', skor);
+                
+                        jawabanObj.jawaban = benarsalah;
+                        jawabanObj.skor = skor;
+                    } catch (error) {
+                        console.error("Error mengambil skor benar/salah:", error);
+                        jawabanObj.skor = 0; // Default skor jika terjadi error
+                    }
                 }
         
                 jawabanDataSiswaList.push(jawabanObj);
@@ -471,6 +494,13 @@ async function insertAnalisisJawabanSiswa(req) {
             if (jenis_soal === 2) {
                 for (const kelassAssign of kelas){
                     
+                    const { pernyataan, jawaban } = mencocokan;
+
+                    const skorMap = new Map();
+                    pernyataan.forEach((p) => {
+                        skorMap.set(p.nomor_soal, p.skor);
+                    });
+
                     const listPernyataan = mencocokan.pernyataan
                     .map(payload => ({
                         kode_mapel: id_mapel,
@@ -488,16 +518,18 @@ async function insertAnalisisJawabanSiswa(req) {
                         console.log('finish insert pernyataan');
                     }
 
-                    const listJawabanMencocokan = mencocokan.jawaban
-                    .map(payload => ({
-                        nomor: payload.nomor,
-                        jenis_soal: jenis_soal,
-                        jawaban: payload.jawaban,
-                        skor: 0,
-                        created_at: new Date(),
-                        kelas: kelassAssign.kelas_assign,
-                        id_jawaban_benar: payload.id_jawaban_benar
-                    }))
+                    const listJawabanMencocokan = jawaban.map((j) => {
+                        const skor = skorMap.get(j.nomor);
+                        return{
+                            nomor: j.nomor,
+                            jenis_soal: jenis_soal,
+                            jawaban: j.jawaban,
+                            skor: skor || 0,
+                            created_at: new Date(),
+                            kelas: kelassAssign.kelas_assign,
+                            id_jawaban_benar: j.id_jawaban_benar
+                        }
+                    })
 
                     if (listJawabanMencocokan.length > 0) {
                         console.log('insert into jawaban mencocokan', listJawabanMencocokan);
@@ -511,12 +543,10 @@ async function insertAnalisisJawabanSiswa(req) {
                             console.log('existing soal', existingSoal);
                             
                             if (existingSoal) {
-                                console.log('existing')
                                 // if soal exist update the soal
                                 soalInput = await soalRepository.updateTextSoal(dataPernyataanMencocokan.text_soal, id_mapel, dataPernyataanMencocokan.nomor_soal, kelassAssign.kelas_assign, dataPernyataanMencocokan.skor);
                             } else {
                                 // insert into child 1 (soal)
-                                console.log('baru')
                                 soalInput = await soalRepository.insertIntoSoal(dataPernyataanMencocokan.nomor_soal, id_mapel, kelassAssign.kelas_assign, dataPernyataanMencocokan.text_soal, jenis_soal, available_on, dataPernyataanMencocokan.skor);
                             }
             
@@ -533,7 +563,6 @@ async function insertAnalisisJawabanSiswa(req) {
                             status_available: 1,
                             nisn: nisns.nisn
                         }))
-                        console.log('nisn bulk : ', nisnBulk);
                         await mapelRepository.insertAssignSoalBulk(nisnBulk);
                         // await mapelRepository.insertAssignSoal(kode_soal, id_mapel, kelas, 1);
                     }
@@ -573,6 +602,58 @@ async function getStatusPengerjaan(req) {
     }
 }
 
+async function inputJawabanSiswaMencocokan(req) {
+    try {
+        const { payload } = req.body;
+        const dataJawabanSiswaList = [];
+        for (let jawaban of payload){
+            const {
+                nama_siswa,
+                nisn,
+                kelas,
+                idmapel,
+                jenis_soal,
+                jawaban: { mencocokan },
+            } = jawaban;
+            
+            if (!mencocokan?.pernyataan || !mencocokan.jawaban) {
+                throw new Error("Format jawaban siswa tidak sesuai");
+            }
+
+            const pernyataan = mencocokan.pernyataan;
+            const matchingAnswer = mencocokan.jawaban;
+            
+            let skorAnswers = { skor: 0 };
+            try {
+                if (pernyataan.id_jawaban_benar) {
+                    skorAnswers = await soalRepository.getSkorMatchingAnswer(
+                        pernyataan.nomor_soal, 
+                        kelas, 
+                        pernyataan.id_jawaban_benar
+                    ) || { skor: 0 };
+                }
+            } catch (error) {
+                console.error("Error fetching skor matching answer:", error);
+            }
+            console.log('skor answer: ', skorAnswers);
+            const jawabanObj = {
+                nama_siswa, nisn, kelas, idmapel, jenis_soal, 
+                nomor_soal: pernyataan.nomor_soal,
+                text_soal: pernyataan.text_soal,
+                jawaban: matchingAnswer.jawaban,
+                skor: pernyataan.id_jawaban_benar === matchingAnswer.id_jawaban_benar ? skorAnswers.skor : 0,
+            }
+            dataJawabanSiswaList.push(jawabanObj);
+        }
+        await soalRepository.insertJawabanSiswaBulk(dataJawabanSiswaList);
+
+        return dataJawabanSiswaList;
+    } catch (error) {
+        console.error('Error input jawawaban mencocokan');
+        throw error;
+    }
+}
+
 module.exports = {
     getSoal,
     getSoalEssay,
@@ -589,6 +670,7 @@ module.exports = {
     insertAnalisisJawabanSiswa,
     inserSoalMencocokan,
     getPreviewSoal,
-    getStatusPengerjaan
+    getStatusPengerjaan,
+    inputJawabanSiswaMencocokan
 }
 

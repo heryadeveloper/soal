@@ -23,6 +23,14 @@ module.exports = (sequelize, DataType) => {
                 type:DataType.DATE,
                 defaultValue: DataType.NOW,
                 allowNull: false
+            },
+            kelas: {
+                type:DataType.STRING,
+                allowNull: false,
+            },
+            mapel: {
+                type:DataType.STRING,
+                allowNull: false,
             }
         },{
             tableName:'upload_gambar'

@@ -26,7 +26,8 @@ const routes = [
     { path: '/getMapelForGuruUseCode', method: 'get', handler: mapelController.getMapelForGuruUseKodeGuru},
     { path: '/insertSoalMencocokan', method: 'post', handler: soalController.insertSoalMencocokan, validation: mapelValidation.inputSoalMencocokan},
     { path: '/getPreviewSoal', method: 'get', handler: soalController.getSoalPreview},
-    { path: '/getStatusPengerjaan', method: 'get', handler: soalController.getStatusPengerjaan}
+    { path: '/getStatusPengerjaan', method: 'get', handler: soalController.getStatusPengerjaan},
+    { path: '/insertJawabanSiswaMencocokan', method: 'post', validation: mapelValidation.inputJawabanSiswaMencocokan, handler: soalController.inputJawabanSiswaMencocokan}
 ];
 
 routes.forEach(route => {

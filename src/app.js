@@ -4,6 +4,7 @@ const routess = require('./routes');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const path = require('path');
 const app = express();
 
 app.use((req, _, next) => {
@@ -17,6 +18,10 @@ app.get('/checkservice', (req, res) => {
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true}));
+app.use('/upload', express.static(path.join(__dirname, '../upload')));
+// const upload = require('./middleware/multerConfig');
+// app.use('/upload', upload);
+
 
 
 app.use(cors());

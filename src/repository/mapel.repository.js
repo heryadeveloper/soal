@@ -171,13 +171,15 @@ async function getMapelForGuruUseKodeGuru(kode_guru){
     }
 }
 
-async function uploadGamber(nama, nama_file, path){
+async function uploadGamber(nama, nama_file, path, kelas, mapel){
     try {
         await db.upload_gambar.create({
             nama,
             nama_file,
             path,
-            created_date: new Date
+            created_date: new Date,
+            kelas,
+            mapel
         });
     } catch (error) {
         console.error('Error when upload data');

@@ -71,27 +71,27 @@ const inputJawabanSiswa = {
                     .keys({
                         idx_pilihan: Joi.string().optional().when('..jenis_soal', { is: 0, then: Joi.required() }),
                         text_jawaban: Joi.string().optional().when('..jenis_soal', { is: 1, then: Joi.required() }),
-                        mencocokan: Joi.object().keys({
-                            pernyataan: Joi.array().items(
-                                Joi.object().keys({
-                                    // idx: Joi.number().required(),
-                                    nomor_soal: Joi.number().required(),  // "a", "b", "c", dll.
-                                    text_soal: Joi.string().required(),      // Text dari jawaban pilihan
-                                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
-                                })
-                            ),
-                            jawaban: Joi.array().items(
-                                Joi.object().keys({
-                                    // idx: Joi.number().required(),
-                                    nomor: Joi.number().required(),  // "a", "b", "c", dll.
-                                    jawaban: Joi.string().required(),      // Text dari jawaban pilihan
-                                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
-                                })
-                            ),
-                        }).optional().when('..jenis_soal', { is: 2, then: Joi.required() }),
+                        // mencocokan: Joi.object().keys({
+                        //     pernyataan: Joi.array().items(
+                        //         Joi.object().keys({
+                        //             // idx: Joi.number().required(),
+                        //             nomor_soal: Joi.number().required(),  // "a", "b", "c", dll.
+                        //             text_soal: Joi.string().required(),      // Text dari jawaban pilihan
+                        //             id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                        //         })
+                        //     ),
+                        //     jawaban: Joi.array().items(
+                        //         Joi.object().keys({
+                        //             // idx: Joi.number().required(),
+                        //             nomor: Joi.number().required(),  // "a", "b", "c", dll.
+                        //             jawaban: Joi.string().required(),      // Text dari jawaban pilihan
+                        //             id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                        //         })
+                        //     ),
+                        // }).optional().when('..jenis_soal', { is: 2, then: Joi.required() }),
                         benarsalah: Joi.string().optional().when('..jenis_soal', { is: 3, then: Joi.required() })
                     })
-                    .or('idx_pilihan', 'text_jawaban', 'mencocokan', 'benarsalah') // Require at least one of the fields in jawaban
+                    .or('idx_pilihan', 'text_jawaban', 'benarsalah') // Require at least one of the fields in jawaban
                     .required(),// Ensure jawaban is required as well
                 skor: Joi.number(),
             }).required()
@@ -178,6 +178,41 @@ const inputSoalMencocokan = {
     })
 }
 
+const inputJawabanSiswaMencocokan = {
+    body: Joi.object().keys({
+        payload: Joi.array().items(
+            Joi.object().keys({
+                nama_siswa: Joi.string().required(),
+                nisn: Joi.string().required(),
+                kelas: Joi.string().required(),
+                idmapel: Joi.number().required(),
+                jenis_soal: Joi.number().required(),
+                jawaban: Joi.object()
+                    .keys({
+                        mencocokan: Joi.object().keys({
+                            pernyataan:
+                                Joi.object().keys({
+                                    // idx: Joi.number().required(),
+                                    nomor_soal: Joi.number().required(),  // "a", "b", "c", dll.
+                                    text_soal: Joi.string().required(),      // Text dari jawaban pilihan
+                                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                                }),
+                            jawaban: Joi.object().keys({
+                                    // idx: Joi.number().required(),
+                                    nomor: Joi.number().required(),  // "a", "b", "c", dll.
+                                    jawaban: Joi.string().required(),      // Text dari jawaban pilihan
+                                    id_jawaban_benar: Joi.number().required()          // Skor untuk jawaban yang benar
+                                }),
+                        }).optional().when('..jenis_soal', { is: 2, then: Joi.required() })
+                    })
+                    .or('mencocokan') // Require at least one of the fields in jawaban
+                    .required(),// Ensure jawaban is required as well
+                skor: Joi.number(),
+            }).required()
+        ).required()
+    }).required()
+}
+
 module.exports = {
     inputMapel,
     inputSoal,
@@ -186,5 +221,6 @@ module.exports = {
     updateSkorJawabanSiswa,
     analisisJawabanSiswa,
     deleteMapel,
-    inputSoalMencocokan
+    inputSoalMencocokan,
+    inputJawabanSiswaMencocokan
 }

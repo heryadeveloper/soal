@@ -155,6 +155,15 @@ const getStatusPengerjaan = catchAsync(async(req, res) => {
         res.send(expectationFailed('Something Error', null));
     }
 })
+
+const inputJawabanSiswaMencocokan = catchAsync(async(req, res) => {
+    const inputJawabanSiswaMencocokan = await soalService.inputJawabanSiswaMencocokan(req);
+    if (inputJawabanSiswaMencocokan) {
+        res.send(responseInfo('Success Insert Jawaban Siswa', inputJawabanSiswaMencocokan));
+    } else {
+        res.send(expectationFailed('Something issue when inserting soal', null))
+    }
+})
 module.exports = {
     getSoal,
     getSoalEssay,
@@ -171,5 +180,6 @@ module.exports = {
     insertAnalisisJawabanSiswa,
     insertSoalMencocokan,
     getSoalPreview,
-    getStatusPengerjaan
+    getStatusPengerjaan,
+    inputJawabanSiswaMencocokan
 }

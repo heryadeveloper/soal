@@ -1,9 +1,11 @@
 const express = require('express');
-const { uploadController } = require('../controller');
 const router = express.Router();
+const { uploadController } = require('../controller');
+const upload = require('../middleware/multerConfig');
+
 
 router
-    .post('/uploadfile', uploadController.uploadFile)
+    .post('/uploadfile',  uploadController.uploadFile)
     .get('/getImage', uploadController.getImage)
 
 module.exports = router

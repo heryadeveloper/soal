@@ -186,7 +186,8 @@ async function getAvailableTest(kelas, nisn) {
             m.idmapel = as2.kd_mapel
             and m.kelas = as2.kelas  
             where as2.kelas = :kelas
-            and as2.nisn = :nisn`,
+            and as2.nisn = :nisn
+            and NOW() >= as2.created_date`,
             {
                 replacements: {
                 kelas: kelas,
@@ -396,17 +397,55 @@ async function getSkor( kode_mapel, nomor_soal, kelas, pilihan_benar){
     }
 }
 
+async function getSkorBenarSalah( nomor_soal, kelas, jawaban){
+    try {
+        const getSkor = await db.benarsalah.findOne({
+            where: {
+                nomor_soal, kelas, jawaban
+            },
+            raw: true,
+        });
+        return getSkor;
+    } catch (error) {
+        console.error('Error get skor');
+        throw new error.message;
+    }
+}
+
+async function getSkorMatchingAnswer( nomor, kelas, id_jawaban_benar){
+    try {
+        const getSkor = await db.matching_answer.findOne({
+            where: {
+                nomor, kelas, id_jawaban_benar
+            },
+            raw: true,
+        });
+        return getSkor;
+    } catch (error) {
+        console.error('Error get skor');
+        throw new error.message;
+    }
+}
+
 async function getDataJawabanSiswa(kelas, idmapel, nisn, kode_guru){
     try {
         const result = await db.sequelize.query(`
-            SELECT a.id, a.nama_siswa, a.kelas, a.nisn, c.nama_mapel, a.idmapel, a.nomor_soal, a.jenis_soal, a.text_soal, a.jawaban, a.skor
+            SELECT a.id, a.nama_siswa, a.kelas, a.nisn, c.nama_mapel, a.idmapel, a.nomor_soal, a.jenis_soal, 
+            case
+                when a.jenis_soal = 0 then 'Pillihan Ganda'
+                when a.jenis_soal = 1 then 'Essay'
+                when a.jenis_soal = 2 then 'Menjodohkan'
+                when a.jenis_soal = 3 then 'Benar Salah'
+            end as jenis,
+            a.text_soal, a.jawaban, a.skor
             FROM data_jawaban_siswa a
             JOIN mapel c ON c.idmapel = a.idmapel and c.kelas = a.kelas
             JOIN account_guru_karyawan b ON b.kode_guru = c.kode_guru
             WHERE c.idmapel = :idmapel
             AND a.kelas = :kelas
             AND a.nisn = :nisn
-            AND b.kode_guru = :kode_guru`,
+            AND b.kode_guru = :kode_guru
+            order by a.nomor_soal ASC`,
             {
                 replacements: {
                 idmapel: idmapel,
@@ -452,6 +491,7 @@ async function sumSkorJawabanSiswa(nisn, idmapel, kode_soal){
                 from data_jawaban_siswa a 
                 join mapel b on 
                 a.idmapel = b.idmapel
+                and a.kelas = b.kelas
                 join data_induk c on
                 a.nisn = c.nisn 
                 where c.nisn = :nisn
@@ -860,6 +900,8 @@ module.exports = {
     deleteEssay,
     deleteSoal,
     getSkor,
+    getSkorBenarSalah,
+    getSkorMatchingAnswer,
     getDataJawabanSiswa,
     updateSkorJawabanSiswa,
     sumSkorJawabanSiswa,

@@ -39,6 +39,10 @@ module.exports = (sequelize, DataType)=> {
             skor: {
                 type: DataType.INTEGER,
                 allowNull: true,
+            },
+            path_image: {
+                type: DataType.STRING,
+                allowNull: true,
             }
         },{
             tableName:'pilihan_ganda'

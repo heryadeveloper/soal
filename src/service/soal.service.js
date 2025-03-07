@@ -21,13 +21,14 @@ async function getSoal(req){
                 // Hanya ambil pilihan jika soal jenisnya pilihan ganda (jenis_soal === 0)
                 if (soal.jenis_soal === 0) {
                     pilihan = await soalRepository.getPilgan(soal.kode_mapel,soal.nomor_soal, soal.kelas);
-
+                    console.log('pililan : ', pilihan)
                     // Ubah data pilihan menjadi bentuk yang diinginkan
                     pilihan = pilihan.map((jawaban) => ({
                         idx_pilihan: jawaban.idx_pilihan,
                         pilihan: jawaban.pilihan,
                         pilihan_benar: jawaban.pilihan_benar,
-                        skor: jawaban.skor
+                        skor: jawaban.skor,
+                        path_image: jawaban.path_image !== null ? jawaban.path_image : ''
                     }));
                 }
                 else if (soal.jenis_soal === 2) {

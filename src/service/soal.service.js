@@ -344,7 +344,7 @@ async function inputJawabanSiswa(req){
             }
         
             // Update status soal setelah berhasil disimpan
-            await soalRepository.updateStatusSoal(kelas, nisn);
+            await soalRepository.updateStatusSoal(kelas, nisn, idmapel);
         }
         
         await soalRepository.insertJawabanSiswaBulk(jawabanDataSiswaList);

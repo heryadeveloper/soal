@@ -221,14 +221,15 @@ async function getMatchingAnswer(kode_mapel, jenis_soal, kelas) {
         throw error;
     }
 }
-async function updateStatusSoal(kelas , nisn){
+async function updateStatusSoal(kelas , nisn, idmapel){
     try {
         await db.assign_soal.update(
             { status_available: 0 }, // Set status to 1
             {
                 where: {
                     kelas: kelas,
-                    nisn: nisn
+                    nisn: nisn,
+                    kd_mapel: idmapel
                 }
             }
         );

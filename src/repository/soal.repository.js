@@ -803,11 +803,12 @@ async function getMatchingQuestion(kode_mapel, kelas) {
     
 }
 
-async function getMatchingAnswered(kelas) {
+async function getMatchingAnswered(kelas, kode_mapel) {
     try {
         const matchingAnswer = await db.matching_answer.findAll({
             where:{
                 kelas,
+                kode_mapel
             },
             raw: true,
         });

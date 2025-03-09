@@ -37,6 +37,10 @@ module.exports = (sequelize, DataType) => {
                 type:DataType.INTEGER,
                 allowNull: false
             },
+            kode_mapel:{
+                type:DataType.INTEGER,
+                allowNull: false
+            },
         },{
             tableName:'matching_answer'
         }

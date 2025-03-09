@@ -34,7 +34,7 @@ async function getSoal(req){
                 else if (soal.jenis_soal === 2) {
                     // comparation = await so/alRepository.getMatchingAnswer(soal.kode_mapel, soal.jenis_soal, soal.kelas)
                     matchingquestion = await soalRepository.getMatchingQuestion(soal.kode_mapel, soal.kelas);
-                    matchinganswer = await soalRepository.getMatchingAnswered(soal.kelas);
+                    matchinganswer = await soalRepository.getMatchingAnswered(soal.kelas, soal.kode_mapel);
                     console.log('matching answere', matchinganswer);
                     
                     const pernyataan = matchingquestion.map((result) => ({

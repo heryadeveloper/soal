@@ -200,7 +200,8 @@ async function getImage(nama_file) {
         }
         return imageFile;
     } catch (error) {
-        
+        console.error('Error when get image');
+        throw error;
     }
 }
 

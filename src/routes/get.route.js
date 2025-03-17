@@ -1,6 +1,6 @@
 const express = require('express');
 const validate = require('../middleware/validate');
-const { mapelController, soalController, uploadController } = require('../controller');
+const { mapelController, soalController, uploadController, penilaianController } = require('../controller');
 const { mapelValidation } = require('../validation');
 
 const router = express.Router();
@@ -27,7 +27,9 @@ const routes = [
     { path: '/insertSoalMencocokan', method: 'post', handler: soalController.insertSoalMencocokan, validation: mapelValidation.inputSoalMencocokan},
     { path: '/getPreviewSoal', method: 'get', handler: soalController.getSoalPreview},
     { path: '/getStatusPengerjaan', method: 'get', handler: soalController.getStatusPengerjaan},
-    { path: '/insertJawabanSiswaMencocokan', method: 'post', validation: mapelValidation.inputJawabanSiswaMencocokan, handler: soalController.inputJawabanSiswaMencocokan}
+    { path: '/insertJawabanSiswaMencocokan', method: 'post', validation: mapelValidation.inputJawabanSiswaMencocokan, handler: soalController.inputJawabanSiswaMencocokan},
+    { path: '/getDataFinalPenilaian', method: 'get', handler: penilaianController.getFinalDataPenilaians},
+    { path: '/generateExcelDataNilai', method: 'get', handler: penilaianController.generateExcel}
 ];
 
 routes.forEach(route => {

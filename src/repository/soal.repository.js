@@ -482,7 +482,7 @@ async function updateSkorJawabanSiswa(kelas, nisn, idmapel, nomor_soal, skor){
     }
 }
 
-async function sumSkorJawabanSiswa(nisn, idmapel, kode_soal){
+async function sumSkorJawabanSiswa(nisn, idmapel, kode_soal, tahun_ajaran){
     try {
         const query = `select 
                 sum(skor) skor,
@@ -496,9 +496,10 @@ async function sumSkorJawabanSiswa(nisn, idmapel, kode_soal){
                 join data_induk c on
                 a.nisn = c.nisn 
                 where c.nisn = :nisn
-                and a.idmapel = :idmapel`;
+                and a.idmapel = :idmapel
+                and c.tahun_ajaran = :tahun_ajaran`;
         const responseData = await db.sequelize.query(query, {
-            replacements: {nisn,  idmapel, kode_soal},
+            replacements: {nisn,  idmapel, kode_soal, tahun_ajaran},
             type: db.Sequelize.QueryTypes.SELECT,
         });
         return responseData;

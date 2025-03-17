@@ -1,4 +1,4 @@
-const { soalRepository, mapelRepository } = require("../repository");
+const { soalRepository, mapelRepository, penilaiaRepository } = require("../repository");
 const { getSkorMatchingAnswer } = require("../repository/soal.repository");
 
 async function getSoal(req){
@@ -427,10 +427,20 @@ async function updateSkorJawabanSiswa(req) {
 
 async function sumSkorJawabanSiswa(req){
     try {
-        const { nisn, idmapel, kode_soal} = req.query;
-        const data = await soalRepository.sumSkorJawabanSiswa(nisn, idmapel, kode_soal);
-        //insert ke dalam penilaian siswa
-        await soalRepository.insertPenilaianSiswa(data[0].nama, data[0].rombel_saat_ini, nisn, data[0].nama_mapel, data[0].skor);
+        const { nisn, idmapel, kode_soal, kelas, tahun_ajaran} = req.query;
+        const data = await soalRepository.sumSkorJawabanSiswa(nisn, idmapel, kode_soal, tahun_ajaran);
+        console.log('data penilaian: ', data);
+
+        //check count get data penilaian
+        const dataPenilaian = await penilaiaRepository.getCountPenilaian(nisn, kelas);
+        console.log('count penilaian: ', dataPenilaian);
+        if (dataPenilaian >= 1) {
+            console.log('update nilai');
+            await penilaiaRepository.updateNilaiAkhirPenilaian(data[0].skor, kelas, nisn);
+        }else{
+             //insert ke dalam penilaian siswa
+            await soalRepository.insertPenilaianSiswa(data[0].nama, kelas, nisn, data[0].nama_mapel, data[0].skor);
+        }
         return data;
     } catch (error) {
         console.error('Error Sum Skor Nilai Siswa', error);

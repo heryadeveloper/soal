@@ -4,8 +4,8 @@ const { QueryTypes } = require('sequelize');
 async function getFinalPenilaian(kodeGuru, kelas, idMapel) {
     try {
         const result =
-                    `select b.id, b.nama_siswa, b.nisn, b.nilai, b.submit_date  as tanggal_submit from smknutulis.mapel a
-                    join smknutulis.penilaian b
+                    `select b.id, b.nama_siswa, b.nisn, b.nilai, b.submit_date  as tanggal_submit from mapel a
+                    join penilaian b
                     on a.kelas = b.kelas
                     and a.nama_mapel = b.mata_pelajaran
                     where a.kode_guru =:kodeGuru

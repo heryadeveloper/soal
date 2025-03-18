@@ -22,11 +22,11 @@ async function getFinalPenilaian(kodeGuru, kelas, idMapel) {
     }
 }
 
-async function getCountPenilaian(nisn, kelas) {
+async function getCountPenilaian(nisn, kelas, idmapel) {
     try {
         const count  = await db.penilaian.count({
             where:{
-                nisn,kelas
+                nisn,kelas, idmapel
             },
             raw: true,
         });
@@ -37,14 +37,15 @@ async function getCountPenilaian(nisn, kelas) {
     }
 }
 
-async function updateNilaiAkhirPenilaian(nilai, kelas, nisn){
+async function updateNilaiAkhirPenilaian(nilai, kelas, nisn, idmapel){
     try {
         await db.penilaian.update(
             {nilai: nilai},
             {
                 where:{
                     kelas,
-                    nisn
+                    nisn,
+                    idmapel
                 }
             }
         )

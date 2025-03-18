@@ -432,11 +432,11 @@ async function sumSkorJawabanSiswa(req){
         console.log('data penilaian: ', data);
 
         //check count get data penilaian
-        const dataPenilaian = await penilaiaRepository.getCountPenilaian(nisn, kelas);
+        const dataPenilaian = await penilaiaRepository.getCountPenilaian(nisn, kelas, idmapel);
         console.log('count penilaian: ', dataPenilaian);
         if (dataPenilaian >= 1) {
             console.log('update nilai');
-            await penilaiaRepository.updateNilaiAkhirPenilaian(data[0].skor, kelas, nisn);
+            await penilaiaRepository.updateNilaiAkhirPenilaian(data[0].skor, kelas, nisn, idmapel);
         }else{
              //insert ke dalam penilaian siswa
             await soalRepository.insertPenilaianSiswa(data[0].nama, kelas, nisn, data[0].nama_mapel, data[0].skor);

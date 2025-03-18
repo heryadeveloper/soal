@@ -31,7 +31,11 @@ module.exports = (sequelize, DataType) => {
                 type:DataType.DATE,
                 defaultValue: DataType.NOW,
                 allowNull: false
-            }
+            },
+            idmapel: {
+                type:DataType.INTEGER,
+                allowNull: true,
+            },
         },{
             tableName:'penilaian'
         }

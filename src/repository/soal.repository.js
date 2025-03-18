@@ -509,7 +509,7 @@ async function sumSkorJawabanSiswa(nisn, idmapel, kode_soal, tahun_ajaran){
     }
 }
 
-async function insertPenilaianSiswa(nama_siswa, kelas, nisn, mata_pelajaran, nilai) {
+async function insertPenilaianSiswa(nama_siswa, kelas, nisn, mata_pelajaran, nilai, idmapel) {
     try {
         await db.penilaian.create({
             nama_siswa,
@@ -517,7 +517,8 @@ async function insertPenilaianSiswa(nama_siswa, kelas, nisn, mata_pelajaran, nil
             nisn,
             mata_pelajaran,
             nilai,
-            submit_date: new Date
+            submit_date: new Date,
+            idmapel
         });
     } catch (error) {
         console.error('Error when inserting data ');

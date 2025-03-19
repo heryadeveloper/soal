@@ -439,7 +439,7 @@ async function sumSkorJawabanSiswa(req){
             await penilaiaRepository.updateNilaiAkhirPenilaian(data[0].skor, kelas, nisn, idmapel);
         }else{
              //insert ke dalam penilaian siswa
-            await soalRepository.insertPenilaianSiswa(data[0].nama, kelas, nisn, data[0].nama_mapel, data[0].skor), idmapel;
+            await soalRepository.insertPenilaianSiswa(data[0].nama, kelas, nisn, data[0].nama_mapel, data[0].skor, idmapel);
         }
         return data;
     } catch (error) {
